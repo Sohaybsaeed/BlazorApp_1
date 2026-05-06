@@ -1,0 +1,19 @@
+﻿@page "/home"
+@layout Layout.AuthenticatedLayout
+@rendermode InteractiveServer
+
+
+<h3>Hello Blazor 👋</h3>
+
+<button @onclick="ClickMe">Click</button>
+
+<p>@message</p>
+
+@code {
+    string message = "";
+
+    void ClickMe()
+    {
+        message = "Blazor is working!";
+    }
+}

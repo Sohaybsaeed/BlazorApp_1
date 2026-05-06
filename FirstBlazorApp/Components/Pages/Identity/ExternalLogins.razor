@@ -1,0 +1,118 @@
+@*
+    ExternalLogins.razor — manages AspNetUserLogins via UserManager.
+    Select a user, view their external login providers, remove entries.
+    No hardcoded policy attribute — authorization is fully dynamic.
+*@
+@page "/users/external-logins"
+@layout Layout.AuthenticatedLayout
+@attribute [Authorize]
+@using FirstBlazorApp.Services.IService
+@using Microsoft.AspNetCore.Identity
+@inject IIdentityService IdentityService
+@inject NavigationManager Nav
+@rendermode InteractiveServer
+
+<div class="im-page">
+
+    <div class="im-header">
+        <button class="im-back-btn" @onclick='() => Nav.NavigateTo("/users")'>← Back</button>
+        <h1 class="im-title">🔗 External Logins</h1>
+        <span class="im-subtitle">AspNetUserLogins table</span>
+    </div>
+
+    <!-- User Selector -->
+    <div class="im-card">
+        <div class="im-card-title">Select User</div>
+        <select class="im-select" @bind="selectedUserId" @bind:after="OnUserSelected">
+            <option value="0">-- Select a user --</option>
+            @foreach (var u in allUsers)
+            {
+                <option value="@u.Id">@u.UserName (@u.Email)</option>
+            }
+        </select>
+    </div>
+
+    @if (selectedUserId > 0)
+    {
+        @if (!string.IsNullOrEmpty(formError))   { <div class="im-alert im-alert-error">❌ @formError</div> }
+        @if (!string.IsNullOrEmpty(formSuccess)) { <div class="im-alert im-alert-success">✅ @formSuccess</div> }
+
+        <div class="im-card">
+            <div class="im-card-title">
+                External Logins for <strong>@(allUsers.FirstOrDefault(u => u.Id == selectedUserId)?.UserName)</strong>
+            </div>
+
+            @if (isLoading)
+            {
+                <div class="im-loading"><span class="im-spinner"></span> Loading...</div>
+            }
+            else if (!logins.Any())
+            {
+                <div class="im-empty">No external logins linked to this user.</div>
+            }
+            else
+            {
+                <table class="im-table">
+                    <thead>
+                        <tr>
+                            <th>Login Provider</th>
+                            <th>Display Name</th>
+                            <th>Provider Key</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var login in logins)
+                        {
+                            <tr>
+                                <td><span class="im-badge">@login.LoginProvider</span></td>
+                                <td>@(login.ProviderDisplayName ?? "—")</td>
+                                <td class="im-truncate">@login.ProviderKey</td>
+                                <td>
+                                    <button class="im-btn-sm im-btn-danger"
+                                            @onclick="() => RemoveLogin(login.LoginProvider, login.ProviderKey)">
+                                        🗑️ Remove
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+    }
+
+</div>
+
+@code {
+    private List<ApplicationUser> allUsers = new();
+    private List<UserLoginInfo> logins = new();
+
+    private int selectedUserId = 0;
+    private bool isLoading = false;
+    private string formError = "";
+    private string formSuccess = "";
+
+    protected override async Task OnInitializedAsync()
+        => allUsers = await IdentityService.GetAllUsersAsync();
+
+    private async Task OnUserSelected()
+    {
+        formError = ""; formSuccess = "";
+        if (selectedUserId > 0)
+        {
+            isLoading = true;
+            logins = await IdentityService.GetUserLoginsAsync(selectedUserId);
+            isLoading = false;
+        }
+        else { logins = new(); }
+    }
+
+    private async Task RemoveLogin(string provider, string key)
+    {
+        formError = ""; formSuccess = "";
+        var (ok, err) = await IdentityService.RemoveUserLoginAsync(selectedUserId, provider, key);
+        if (ok) { formSuccess = "External login removed."; logins = await IdentityService.GetUserLoginsAsync(selectedUserId); }
+        else    { formError = err; }
+    }
+}

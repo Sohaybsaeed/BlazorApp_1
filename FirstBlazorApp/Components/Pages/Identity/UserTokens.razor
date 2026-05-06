@@ -1,0 +1,117 @@
+@*
+    UserTokens.razor — manages AspNetUserTokens via UserManager.
+    Select a user, view their stored tokens (value masked), revoke tokens.
+    No hardcoded policy attribute — authorization is fully dynamic.
+*@
+@page "/users/tokens"
+@layout Layout.AuthenticatedLayout
+@attribute [Authorize]
+@using FirstBlazorApp.Services.IService
+@inject IIdentityService IdentityService
+@inject NavigationManager Nav
+@rendermode InteractiveServer
+
+<div class="im-page">
+
+    <div class="im-header">
+        <button class="im-back-btn" @onclick='() => Nav.NavigateTo("/users")'>← Back</button>
+        <h1 class="im-title">🎟️ User Tokens</h1>
+        <span class="im-subtitle">AspNetUserTokens table</span>
+    </div>
+
+    <!-- User Selector -->
+    <div class="im-card">
+        <div class="im-card-title">Select User</div>
+        <select class="im-select" @bind="selectedUserId" @bind:after="OnUserSelected">
+            <option value="0">-- Select a user --</option>
+            @foreach (var u in allUsers)
+            {
+                <option value="@u.Id">@u.UserName (@u.Email)</option>
+            }
+        </select>
+    </div>
+
+    @if (selectedUserId > 0)
+    {
+        @if (!string.IsNullOrEmpty(formError))   { <div class="im-alert im-alert-error">❌ @formError</div> }
+        @if (!string.IsNullOrEmpty(formSuccess)) { <div class="im-alert im-alert-success">✅ @formSuccess</div> }
+
+        <div class="im-card">
+            <div class="im-card-title">
+                Tokens for <strong>@(allUsers.FirstOrDefault(u => u.Id == selectedUserId)?.UserName)</strong>
+            </div>
+
+            @if (isLoading)
+            {
+                <div class="im-loading"><span class="im-spinner"></span> Loading...</div>
+            }
+            else if (!tokens.Any())
+            {
+                <div class="im-empty">No tokens stored for this user.</div>
+            }
+            else
+            {
+                <table class="im-table">
+                    <thead>
+                        <tr>
+                            <th>Login Provider</th>
+                            <th>Token Name</th>
+                            <th>Value</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var t in tokens)
+                        {
+                            <tr>
+                                <td><span class="im-badge">@t.LoginProvider</span></td>
+                                <td>@t.Name</td>
+                                <td class="im-masked">••••••••</td>
+                                <td>
+                                    <button class="im-btn-sm im-btn-danger"
+                                            @onclick="() => RevokeToken(t.LoginProvider, t.Name)">
+                                        🗑️ Revoke
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+    }
+
+</div>
+
+@code {
+    private List<ApplicationUser> allUsers = new();
+    private List<UserTokenDto> tokens = new();
+
+    private int selectedUserId = 0;
+    private bool isLoading = false;
+    private string formError = "";
+    private string formSuccess = "";
+
+    protected override async Task OnInitializedAsync()
+        => allUsers = await IdentityService.GetAllUsersAsync();
+
+    private async Task OnUserSelected()
+    {
+        formError = ""; formSuccess = "";
+        if (selectedUserId > 0)
+        {
+            isLoading = true;
+            tokens = await IdentityService.GetUserTokensAsync(selectedUserId);
+            isLoading = false;
+        }
+        else { tokens = new(); }
+    }
+
+    private async Task RevokeToken(string provider, string name)
+    {
+        formError = ""; formSuccess = "";
+        var (ok, err) = await IdentityService.RemoveUserTokenAsync(selectedUserId, provider, name);
+        if (ok) { formSuccess = "Token revoked."; tokens = await IdentityService.GetUserTokensAsync(selectedUserId); }
+        else    { formError = err; }
+    }
+}

@@ -1,0 +1,240 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\BlazorApplication\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{908D65FE-4B80-4120-A682-4AAEA2FC114A}|FirstBlazorApp\\FirstBlazorApp.csproj|c:\\blazorapplication\\firstblazorapp\\components\\pages\\customerprofile.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{908D65FE-4B80-4120-A682-4AAEA2FC114A}|FirstBlazorApp\\FirstBlazorApp.csproj|solutionrelative:firstblazorapp\\components\\pages\\customerprofile.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{908D65FE-4B80-4120-A682-4AAEA2FC114A}|FirstBlazorApp\\FirstBlazorApp.csproj|c:\\blazorapplication\\firstblazorapp\\services\\service\\permissiontemplateservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{908D65FE-4B80-4120-A682-4AAEA2FC114A}|FirstBlazorApp\\FirstBlazorApp.csproj|solutionrelative:firstblazorapp\\services\\service\\permissiontemplateservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{908D65FE-4B80-4120-A682-4AAEA2FC114A}|FirstBlazorApp\\FirstBlazorApp.csproj|c:\\blazorapplication\\firstblazorapp\\components\\pages\\userpermissions.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{908D65FE-4B80-4120-A682-4AAEA2FC114A}|FirstBlazorApp\\FirstBlazorApp.csproj|solutionrelative:firstblazorapp\\components\\pages\\userpermissions.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{908D65FE-4B80-4120-A682-4AAEA2FC114A}|FirstBlazorApp\\FirstBlazorApp.csproj|c:\\blazorapplication\\firstblazorapp\\models\\custom models\\permissiontemplate.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{908D65FE-4B80-4120-A682-4AAEA2FC114A}|FirstBlazorApp\\FirstBlazorApp.csproj|solutionrelative:firstblazorapp\\models\\custom models\\permissiontemplate.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{908D65FE-4B80-4120-A682-4AAEA2FC114A}|FirstBlazorApp\\FirstBlazorApp.csproj|c:\\blazorapplication\\firstblazorapp\\components\\pages\\permissiontemplate.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{908D65FE-4B80-4120-A682-4AAEA2FC114A}|FirstBlazorApp\\FirstBlazorApp.csproj|solutionrelative:firstblazorapp\\components\\pages\\permissiontemplate.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{908D65FE-4B80-4120-A682-4AAEA2FC114A}|FirstBlazorApp\\FirstBlazorApp.csproj|c:\\blazorapplication\\firstblazorapp\\components\\pages\\viewusers.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{908D65FE-4B80-4120-A682-4AAEA2FC114A}|FirstBlazorApp\\FirstBlazorApp.csproj|solutionrelative:firstblazorapp\\components\\pages\\viewusers.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{908D65FE-4B80-4120-A682-4AAEA2FC114A}|FirstBlazorApp\\FirstBlazorApp.csproj|c:\\blazorapplication\\firstblazorapp\\components\\pages\\users.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{908D65FE-4B80-4120-A682-4AAEA2FC114A}|FirstBlazorApp\\FirstBlazorApp.csproj|solutionrelative:firstblazorapp\\components\\pages\\users.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{908D65FE-4B80-4120-A682-4AAEA2FC114A}|FirstBlazorApp\\FirstBlazorApp.csproj|c:\\blazorapplication\\firstblazorapp\\services\\service\\userservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{908D65FE-4B80-4120-A682-4AAEA2FC114A}|FirstBlazorApp\\FirstBlazorApp.csproj|solutionrelative:firstblazorapp\\services\\service\\userservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 1,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedHeight": 323,
+          "SelectedChildIndex": 20,
+          "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{1c64b9c2-e352-428e-a56d-0ace190b99a6}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:132:0:{1fc202d4-d401-403c-9834-5b218574bb67}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:128:0:{13b12e3e-c1b4-4539-9371-4fe9a0d523fc}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:135:0:{1fc202d4-d401-403c-9834-5b218574bb67}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:136:0:{1fc202d4-d401-403c-9834-5b218574bb67}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:137:0:{1fc202d4-d401-403c-9834-5b218574bb67}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:131:0:{1fc202d4-d401-403c-9834-5b218574bb67}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:135:0:{116d2292-e37d-41cd-a077-ebacac4c8cc4}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:138:0:{1fc202d4-d401-403c-9834-5b218574bb67}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:139:0:{1fc202d4-d401-403c-9834-5b218574bb67}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:140:0:{1fc202d4-d401-403c-9834-5b218574bb67}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:141:0:{1fc202d4-d401-403c-9834-5b218574bb67}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:142:0:{1fc202d4-d401-403c-9834-5b218574bb67}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:143:0:{1fc202d4-d401-403c-9834-5b218574bb67}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:144:0:{1fc202d4-d401-403c-9834-5b218574bb67}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:136:0:{116d2292-e37d-41cd-a077-ebacac4c8cc4}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:137:0:{116d2292-e37d-41cd-a077-ebacac4c8cc4}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:129:0:{13b12e3e-c1b4-4539-9371-4fe9a0d523fc}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:140:0:{116d2292-e37d-41cd-a077-ebacac4c8cc4}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:130:0:{13b12e3e-c1b4-4539-9371-4fe9a0d523fc}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "CustomerProfile.razor",
+              "DocumentMoniker": "C:\\BlazorApplication\\FirstBlazorApp\\Components\\Pages\\CustomerProfile.razor",
+              "RelativeDocumentMoniker": "FirstBlazorApp\\Components\\Pages\\CustomerProfile.razor",
+              "ToolTip": "C:\\BlazorApplication\\FirstBlazorApp\\Components\\Pages\\CustomerProfile.razor",
+              "RelativeToolTip": "FirstBlazorApp\\Components\\Pages\\CustomerProfile.razor",
+              "ViewState": "AgIAAGQAAAAAAAAAAAAAwH4AAAAEAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-05-06T13:13:06.378Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "PermissionTemplate.cs",
+              "DocumentMoniker": "C:\\BlazorApplication\\FirstBlazorApp\\Models\\Custom Models\\PermissionTemplate.cs",
+              "RelativeDocumentMoniker": "FirstBlazorApp\\Models\\Custom Models\\PermissionTemplate.cs",
+              "ToolTip": "C:\\BlazorApplication\\FirstBlazorApp\\Models\\Custom Models\\PermissionTemplate.cs",
+              "RelativeToolTip": "FirstBlazorApp\\Models\\Custom Models\\PermissionTemplate.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAuwA4AAAASAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-06T13:03:44.366Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "UserPermissions.razor",
+              "DocumentMoniker": "C:\\BlazorApplication\\FirstBlazorApp\\Components\\Pages\\UserPermissions.razor",
+              "RelativeDocumentMoniker": "FirstBlazorApp\\Components\\Pages\\UserPermissions.razor",
+              "ToolTip": "C:\\BlazorApplication\\FirstBlazorApp\\Components\\Pages\\UserPermissions.razor",
+              "RelativeToolTip": "FirstBlazorApp\\Components\\Pages\\UserPermissions.razor",
+              "ViewState": "AgIAALYAAAAAAAAAAAAAwMQAAAAFAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-05-06T12:18:44.503Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "PermissionTemplate.razor",
+              "DocumentMoniker": "C:\\BlazorApplication\\FirstBlazorApp\\Components\\Pages\\PermissionTemplate.razor",
+              "RelativeDocumentMoniker": "FirstBlazorApp\\Components\\Pages\\PermissionTemplate.razor",
+              "ToolTip": "C:\\BlazorApplication\\FirstBlazorApp\\Components\\Pages\\PermissionTemplate.razor",
+              "RelativeToolTip": "FirstBlazorApp\\Components\\Pages\\PermissionTemplate.razor",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-05-06T11:39:28.806Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "ViewUsers.razor",
+              "DocumentMoniker": "C:\\BlazorApplication\\FirstBlazorApp\\Components\\Pages\\ViewUsers.razor",
+              "RelativeDocumentMoniker": "FirstBlazorApp\\Components\\Pages\\ViewUsers.razor",
+              "ToolTip": "C:\\BlazorApplication\\FirstBlazorApp\\Components\\Pages\\ViewUsers.razor",
+              "RelativeToolTip": "FirstBlazorApp\\Components\\Pages\\ViewUsers.razor",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAANcBAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-05-06T11:34:51.947Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "Users.razor",
+              "DocumentMoniker": "C:\\BlazorApplication\\FirstBlazorApp\\Components\\Pages\\Users.razor",
+              "RelativeDocumentMoniker": "FirstBlazorApp\\Components\\Pages\\Users.razor",
+              "ToolTip": "C:\\BlazorApplication\\FirstBlazorApp\\Components\\Pages\\Users.razor",
+              "RelativeToolTip": "FirstBlazorApp\\Components\\Pages\\Users.razor",
+              "ViewState": "AgIAABIAAAAAAAAAAAAAAEkAAAAFAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-05-06T11:30:23.129Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "PermissionTemplateService.cs",
+              "DocumentMoniker": "C:\\BlazorApplication\\FirstBlazorApp\\Services\\Service\\PermissionTemplateService.cs",
+              "RelativeDocumentMoniker": "FirstBlazorApp\\Services\\Service\\PermissionTemplateService.cs",
+              "ToolTip": "C:\\BlazorApplication\\FirstBlazorApp\\Services\\Service\\PermissionTemplateService.cs",
+              "RelativeToolTip": "FirstBlazorApp\\Services\\Service\\PermissionTemplateService.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAADIAAAAIAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-06T11:26:07.25Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "UserService.cs",
+              "DocumentMoniker": "C:\\BlazorApplication\\FirstBlazorApp\\Services\\Service\\UserService.cs",
+              "RelativeDocumentMoniker": "FirstBlazorApp\\Services\\Service\\UserService.cs",
+              "ToolTip": "C:\\BlazorApplication\\FirstBlazorApp\\Services\\Service\\UserService.cs",
+              "RelativeToolTip": "FirstBlazorApp\\Services\\Service\\UserService.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABwAAAAEAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-06T10:50:15.797Z"
+            }
+          ]
+        },
+        {
+          "DockedHeight": 77,
+          "SelectedChildIndex": -1,
+          "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{34e76e81-ee4a-11d0-ae2e-00a0c90fffc3}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

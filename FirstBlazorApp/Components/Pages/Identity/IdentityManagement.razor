@@ -1,0 +1,511 @@
+@*
+    IdentityManagement.razor — Unified Identity & Permissions Management.
+    Section 1 — Create / view roles  (AspNetRoles)
+    Section 2 — Assign multiple roles to a user  (AspNetUserRoles)
+    Section 3 — Assign permissions to a role via matrix  (AspNetRoleClaims)
+*@
+@page "/users/identity-management"
+@layout Layout.AuthenticatedLayout
+@attribute [Authorize]
+@using System.Security.Claims
+@using FirstBlazorApp.Services.IService
+@inject IIdentityService IdentityService
+@inject IHttpContextAccessor HttpContextAccessor
+@inject NavigationManager Nav
+@rendermode InteractiveServer
+
+<div class="idm-page">
+
+    <!-- ── Page Header ── -->
+    <div class="idm-header">
+        <button class="idm-back-btn" @onclick='() => Nav.NavigateTo("/users")'>← Back</button>
+        <div class="idm-header-info">
+            <span class="idm-greeting">Good Day, <strong>@(!string.IsNullOrEmpty(userFirstName) ? userFirstName.ToUpper() : "ADMIN")</strong></span>
+            <div class="idm-user-badge">@(!string.IsNullOrEmpty(userFirstName) ? userFirstName.Substring(0,1).ToUpper() : "A")</div>
+        </div>
+    </div>
+
+    <h1 class="idm-main-title">🔐 Identity &amp; Permissions Management</h1>
+
+    <!-- ── Live Summary Bar ── -->
+    @if (selectedUserId > 0 || selectedRoleId > 0)
+    {
+        <div class="idm-summary-bar">
+            <div class="idm-summary-item">
+                <span class="idm-summary-icon">👥</span>
+                <div class="idm-summary-text">
+                    <span class="idm-summary-label">Selected User</span>
+                    <span class="idm-summary-value">
+                        @(selectedUserId > 0
+                            ? allUsers.FirstOrDefault(u => u.Id == selectedUserId)?.UserName ?? "—"
+                            : "None")
+                    </span>
+                </div>
+            </div>
+
+            @if (selectedUserId > 0)
+            {
+                <div class="idm-summary-divider"></div>
+                <div class="idm-summary-item">
+                    <span class="idm-summary-icon">🏷️</span>
+                    <div class="idm-summary-text">
+                        <span class="idm-summary-label">Assigned Roles</span>
+                        <span class="idm-summary-value">
+                            @if (userRoleAssignments.Any())
+                            {
+                                @foreach (var r in userRoleAssignments)
+                                {
+                                    <span class="idm-summary-pill">@r</span>
+                                }
+                            }
+                            else
+                            {
+                                <span class="idm-summary-none">No roles assigned</span>
+                            }
+                        </span>
+                    </div>
+                </div>
+            }
+
+            @if (selectedRoleId > 0)
+            {
+                <div class="idm-summary-divider"></div>
+                <div class="idm-summary-item">
+                    <span class="idm-summary-icon">🔑</span>
+                    <div class="idm-summary-text">
+                        <span class="idm-summary-label">Role Permissions</span>
+                        <span class="idm-summary-value">
+                            @{
+                                var roleName = allRoles.FirstOrDefault(r => r.Id == selectedRoleId)?.Name ?? "—";
+                                var granted  = permMatrix.SelectMany(g => g.Items).Count(i => i.IsGranted);
+                                var total    = permMatrix.SelectMany(g => g.Items).Count();
+                            }
+                            <strong>@roleName</strong>
+                            @if (total > 0)
+                            {
+                                <span class="idm-summary-count">@granted / @total granted</span>
+                            }
+                        </span>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+
+    <!-- ══════════════════════════════════════════════════════════════════
+         SECTION 1 — ROLES
+         ══════════════════════════════════════════════════════════════════ -->
+    <div class="idm-card">
+        <div class="idm-card-header">
+            <h2 class="idm-card-title">🏷️ Roles</h2>
+            <span class="idm-subtitle">AspNetRoles</span>
+        </div>
+
+        <div class="idm-form-row">
+            <input class="idm-input"
+                   placeholder="New role name (e.g. Manager, Auditor)"
+                   @bind="newRoleName"
+                   @bind:event="oninput"
+                   @onkeydown="OnRoleKeyDown" />
+            <button class="idm-btn-primary" @onclick="RequestCreateRole" disabled="@isBusyRole">
+                @if (isBusyRole) { <span class="idm-spinner"></span><span>Creating…</span> }
+                else             { <span>➕ Create Role</span> }
+            </button>
+        </div>
+
+        @if (!string.IsNullOrEmpty(roleError))   { <div class="idm-alert idm-alert-error">❌ @roleError</div> }
+        @if (!string.IsNullOrEmpty(roleSuccess)) { <div class="idm-alert idm-alert-success">✅ @roleSuccess</div> }
+
+        @if (allRoles.Any())
+        {
+            <div class="idm-roles-list">
+                <span class="idm-roles-label">Existing roles:</span>
+                @foreach (var r in allRoles)
+                {
+                    <span class="idm-role-pill">@r.Name</span>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="idm-empty">No roles yet — create one above.</div>
+        }
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════════
+         SECTION 2 — ASSIGN ROLES TO USER
+         ══════════════════════════════════════════════════════════════════ -->
+    <div class="idm-card">
+        <div class="idm-card-header">
+            <h2 class="idm-card-title">👥 Assign Roles to User</h2>
+            <span class="idm-subtitle">AspNetUserRoles · one user → multiple roles</span>
+        </div>
+
+        <div class="idm-form-row">
+            <label class="idm-label">User:</label>
+            <select class="idm-select" @bind="selectedUserId" @bind:after="LoadUserRoles">
+                <option value="0">— select a user —</option>
+                @foreach (var u in allUsers)
+                {
+                    <option value="@u.Id">@u.UserName (@u.Email)</option>
+                }
+            </select>
+        </div>
+
+        @if (selectedUserId > 0)
+        {
+            <div class="idm-matrix-section">
+                <div class="idm-matrix-label">
+                    Roles for <strong>@(allUsers.FirstOrDefault(u => u.Id == selectedUserId)?.UserName)</strong>
+                    — check to assign, uncheck to remove
+                </div>
+
+                @if (!allRoles.Any())
+                {
+                    <div class="idm-empty">No roles available. Create a role in Section 1 first.</div>
+                }
+                else
+                {
+                    <div class="idm-checkbox-grid">
+                        @foreach (var role in allRoles)
+                        {
+                            var assigned = userRoleAssignments.Contains(role.Name ?? "");
+                            <label class="idm-check-card @(assigned ? "idm-check-card--on" : "")">
+                                <input type="checkbox"
+                                       checked="@assigned"
+                                       @onchange="e => ToggleUserRole(role.Name!, (bool)e.Value!)" />
+                                <span class="idm-check-name">@role.Name</span>
+                                @if (assigned) { <span class="idm-check-tick">✓</span> }
+                            </label>
+                        }
+                    </div>
+                }
+
+                @if (!string.IsNullOrEmpty(userRoleError))   { <div class="idm-alert idm-alert-error">❌ @userRoleError</div> }
+                @if (!string.IsNullOrEmpty(userRoleSuccess)) { <div class="idm-alert idm-alert-success">✅ @userRoleSuccess</div> }
+            </div>
+        }
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════════
+         SECTION 3 — PERMISSIONS MATRIX
+         ══════════════════════════════════════════════════════════════════ -->
+    <div class="idm-card">
+        <div class="idm-card-header">
+            <h2 class="idm-card-title">🔑 Role Permissions</h2>
+            <span class="idm-subtitle">AspNetRoleClaims · ClaimType = "permission" · ClaimValue = ActionMethodName</span>
+        </div>
+
+        <div class="idm-form-row">
+            <label class="idm-label">Role:</label>
+            <select class="idm-select" @bind="selectedRoleId" @bind:after="LoadPermissionsMatrix">
+                <option value="0">— select a role —</option>
+                @foreach (var r in allRoles)
+                {
+                    <option value="@r.Id">@r.Name</option>
+                }
+            </select>
+        </div>
+
+        @if (selectedRoleId > 0)
+        {
+            @if (isLoadingMatrix)
+            {
+                <div class="idm-loading">
+                    <span class="idm-spinner idm-spinner--dark"></span> Loading permissions…
+                </div>
+            }
+            else if (!permMatrix.Any())
+            {
+                <div class="idm-empty">No active functionalities found in ApplicationFunctionalities table.</div>
+            }
+            else
+            {
+                <div class="idm-perm-table-wrap">
+                    <table class="idm-perm-table">
+                        <thead>
+                            <tr>
+                                <th class="idm-perm-th-module">Module</th>
+                                <th class="idm-perm-th-perms">Permissions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var group in permMatrix)
+                            {
+                                <tr>
+                                    <td class="idm-perm-td-module">
+                                        <span class="idm-module-name">@group.FormDisplayName</span>
+                                        <span class="idm-module-count">
+                                            @group.Items.Count(i => i.IsGranted) / @group.Items.Count
+                                        </span>
+                                    </td>
+                                    <td class="idm-perm-td-perms">
+                                        <div class="idm-perm-checks">
+                                            @foreach (var item in group.Items)
+                                            {
+                                                <label class="idm-perm-check @(item.IsGranted ? "idm-perm-check--on" : "")">
+                                                    <input type="checkbox"
+                                                           checked="@item.IsGranted"
+                                                           @onchange="e => OnPermissionToggle(item, (bool)e.Value!)" />
+                                                    <span>@item.FunctionalityName</span>
+                                                </label>
+                                            }
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="idm-perm-footer">
+                    <button class="idm-btn-save" @onclick="RequestSavePermissions" disabled="@isSavingMatrix">
+                        @if (isSavingMatrix) { <span class="idm-spinner"></span><span>Saving…</span> }
+                        else                 { <span>💾 Save Permissions</span> }
+                    </button>
+                    @if (!string.IsNullOrEmpty(matrixError))
+                    {
+                        <div class="idm-alert idm-alert-error">❌ @matrixError</div>
+                    }
+                </div>
+            }
+        }
+    </div>
+
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════
+     CONFIRMATION DIALOG — Create Role
+     ══════════════════════════════════════════════════════════════════ -->
+@if (showCreateRoleConfirm)
+{
+    <div class="idm-overlay" @onclick="CancelCreateRole">
+        <div class="idm-dialog" @onclick:stopPropagation="true">
+            <div class="idm-dialog-icon">🏷️</div>
+            <h3 class="idm-dialog-title">Create Role</h3>
+            <p class="idm-dialog-msg">
+                Are you sure you want to create the role
+                <strong>"@newRoleNamePending"</strong>?
+            </p>
+            <div class="idm-dialog-actions">
+                <button class="idm-dialog-btn idm-dialog-btn--cancel" @onclick="CancelCreateRole">
+                    Cancel
+                </button>
+                <button class="idm-dialog-btn idm-dialog-btn--confirm" @onclick="ConfirmCreateRole" disabled="@isBusyRole">
+                    @if (isBusyRole) { <span class="idm-spinner"></span><span>Creating…</span> }
+                    else             { <span>✅ Yes, Create</span> }
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- ══════════════════════════════════════════════════════════════════
+     CONFIRMATION DIALOG — Save Permissions
+     ══════════════════════════════════════════════════════════════════ -->
+@if (showSavePermConfirm)
+{
+    var pendingRoleName = allRoles.FirstOrDefault(r => r.Id == selectedRoleId)?.Name ?? "selected role";
+    var pendingGranted  = permMatrix.SelectMany(g => g.Items).Count(i => i.IsGranted);
+    var pendingTotal    = permMatrix.SelectMany(g => g.Items).Count();
+
+    <div class="idm-overlay" @onclick="CancelSavePermissions">
+        <div class="idm-dialog" @onclick:stopPropagation="true">
+            <div class="idm-dialog-icon">💾</div>
+            <h3 class="idm-dialog-title">Save Permissions</h3>
+            <p class="idm-dialog-msg">
+                Save <strong>@pendingGranted of @pendingTotal</strong> permissions
+                for role <strong>"@pendingRoleName"</strong>?
+                <br />
+                <small style="color:#94a3b8">Page will refresh after saving.</small>
+            </p>
+            <div class="idm-dialog-actions">
+                <button class="idm-dialog-btn idm-dialog-btn--cancel" @onclick="CancelSavePermissions">
+                    Cancel
+                </button>
+                <button class="idm-dialog-btn idm-dialog-btn--save" @onclick="ConfirmSavePermissions" disabled="@isSavingMatrix">
+                    @if (isSavingMatrix) { <span class="idm-spinner"></span><span>Saving…</span> }
+                    else                 { <span>💾 Yes, Save</span> }
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private string userFirstName = "";
+
+    // ── Section 1 ──────────────────────────────────────────────────────
+    private List<ApplicationRole> allRoles = new();
+    private string newRoleName = "";
+    private bool isBusyRole = false;
+    private string roleError = "";
+    private string roleSuccess = "";
+
+    // Confirmation dialog state
+    private bool showCreateRoleConfirm = false;
+    private string newRoleNamePending = "";
+
+    // ── Section 2 ──────────────────────────────────────────────────────
+    private List<ApplicationUser> allUsers = new();
+    private int selectedUserId = 0;
+    private List<string> userRoleAssignments = new();
+    private string userRoleError = "";
+    private string userRoleSuccess = "";
+
+    // ── Section 3 ──────────────────────────────────────────────────────
+    private int selectedRoleId = 0;
+    private List<FunctionalityGroupDto> permMatrix = new();
+    private bool isLoadingMatrix = false;
+    private bool isSavingMatrix = false;
+    private string matrixError = "";
+    private string matrixSuccess = "";
+    private bool showSavePermConfirm = false;
+
+    // ── Init ────────────────────────────────────────────────────────────
+    protected override async Task OnInitializedAsync()
+    {
+        var user = HttpContextAccessor.HttpContext?.User;
+        if (user?.Identity?.IsAuthenticated == true)
+            userFirstName = user.FindFirst("FirstName")?.Value ?? "";
+
+        allRoles = await IdentityService.GetAllRolesAsync();
+        allUsers = await IdentityService.GetAllUsersAsync();
+    }
+
+    // ══════════════════════════════════════════════════════════════════
+    // SECTION 1 — CREATE ROLE (with confirmation dialog)
+    // ══════════════════════════════════════════════════════════════════
+
+    private async Task OnRoleKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter") await RequestCreateRole();
+    }
+
+    /// <summary>Validates input then shows the confirmation dialog.</summary>
+    private Task RequestCreateRole()
+    {
+        roleError = ""; roleSuccess = "";
+        if (string.IsNullOrWhiteSpace(newRoleName))
+        {
+            roleError = "Role name is required.";
+            return Task.CompletedTask;
+        }
+        // Store pending name and show dialog
+        newRoleNamePending = newRoleName.Trim();
+        showCreateRoleConfirm = true;
+        return Task.CompletedTask;
+    }
+
+    private void CancelCreateRole()
+    {
+        showCreateRoleConfirm = false;
+        newRoleNamePending = "";
+    }
+
+    /// <summary>Called when user clicks "Yes, Create" in the dialog.</summary>
+    private async Task ConfirmCreateRole()
+    {
+        isBusyRole = true;
+        var (ok, err) = await IdentityService.CreateRoleAsync(newRoleNamePending);
+        isBusyRole = false;
+        showCreateRoleConfirm = false;
+
+        if (ok)
+        {
+            roleSuccess = $"Role '{newRoleNamePending}' created successfully.";
+            newRoleName = "";
+            newRoleNamePending = "";
+            allRoles = await IdentityService.GetAllRolesAsync();
+        }
+        else
+        {
+            roleError = err;
+            newRoleNamePending = "";
+        }
+    }
+
+    // ══════════════════════════════════════════════════════════════════
+    // SECTION 2 — USER-ROLE ASSIGNMENT
+    // ══════════════════════════════════════════════════════════════════
+
+    private async Task LoadUserRoles()
+    {
+        userRoleError = ""; userRoleSuccess = "";
+        userRoleAssignments = selectedUserId > 0
+            ? await IdentityService.GetUserRolesAsync(selectedUserId)
+            : new();
+    }
+
+    private async Task ToggleUserRole(string roleName, bool isChecked)
+    {
+        userRoleError = ""; userRoleSuccess = "";
+
+        var (ok, err) = isChecked
+            ? await IdentityService.AssignRoleAsync(selectedUserId, roleName)
+            : await IdentityService.RemoveRoleAsync(selectedUserId, roleName);
+
+        if (ok)
+        {
+            userRoleSuccess = isChecked ? $"'{roleName}' assigned." : $"'{roleName}' removed.";
+            if (isChecked) userRoleAssignments.Add(roleName);
+            else           userRoleAssignments.Remove(roleName);
+        }
+        else { userRoleError = err; }
+    }
+
+    // ══════════════════════════════════════════════════════════════════
+    // SECTION 3 — PERMISSIONS MATRIX
+    // ══════════════════════════════════════════════════════════════════
+
+    private async Task LoadPermissionsMatrix()
+    {
+        matrixError = ""; matrixSuccess = "";
+        if (selectedRoleId <= 0) { permMatrix = new(); return; }
+
+        isLoadingMatrix = true;
+        StateHasChanged();
+        permMatrix = await IdentityService.GetFunctionalitiesMatrixAsync(selectedRoleId);
+        isLoadingMatrix = false;
+    }
+
+    private void OnPermissionToggle(FunctionalityItemDto item, bool value)
+    {
+        item.IsGranted = value;
+        StateHasChanged();
+    }
+
+    /// <summary>Shows the save confirmation dialog.</summary>
+    private void RequestSavePermissions()
+    {
+        matrixError = "";
+        showSavePermConfirm = true;
+    }
+
+    private void CancelSavePermissions()
+    {
+        showSavePermConfirm = false;
+    }
+
+    /// <summary>Confirmed — save to DB then full page refresh.</summary>
+    private async Task ConfirmSavePermissions()
+    {
+        isSavingMatrix = true;
+        StateHasChanged();
+
+        var (ok, err) = await IdentityService.SaveRolePermissionsAsync(selectedRoleId, permMatrix);
+
+        if (ok)
+        {
+            // Smooth full-page reload — clears all state, reloads fresh data
+            Nav.NavigateTo("/users/identity-management", forceLoad: true);
+        }
+        else
+        {
+            isSavingMatrix = false;
+            showSavePermConfirm = false;
+            matrixError = err;
+            StateHasChanged();
+        }
+    }
+}

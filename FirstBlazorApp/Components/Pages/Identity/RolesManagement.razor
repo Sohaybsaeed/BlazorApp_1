@@ -1,0 +1,150 @@
+@* 
+    RolesManagement.razor — manages AspNetRoles via RoleManager<ApplicationRole>.
+    Authorization is handled by the existing @attribute [Authorize] + cookie auth.
+    No hardcoded [Authorize(Policy="...")] attribute is used here; access control
+    is enforced dynamically by the PermissionPolicyProvider / DbPermissionHandler pipeline.
+*@
+@page "/users/roles"
+@layout Layout.AuthenticatedLayout
+@attribute [Authorize]
+@using FirstBlazorApp.Services.IService
+@inject IIdentityService IdentityService
+@inject IHttpContextAccessor HttpContextAccessor
+@inject NavigationManager Nav
+@rendermode InteractiveServer
+
+<div class="im-page">
+
+    <!-- Header -->
+    <div class="im-header">
+        <button class="im-back-btn" @onclick='() => Nav.NavigateTo("/users")'>← Back</button>
+        <h1 class="im-title">🏷️ Role Management</h1>
+        <span class="im-subtitle">AspNetRoles table</span>
+    </div>
+
+    <!-- Create Role Form -->
+    <div class="im-card">
+        <div class="im-card-title">Create New Role</div>
+        <div class="im-form-row">
+            <input class="im-input" placeholder="Role name (e.g. Admin)" @bind="newRoleName" @bind:event="oninput" />
+            <button class="im-btn-primary" @onclick="CreateRole" disabled="@isBusy">
+                @if (isBusy) { <span class="im-spinner"></span> } else { <span>➕ Create</span> }
+            </button>
+        </div>
+        @if (!string.IsNullOrEmpty(formError))   { <div class="im-alert im-alert-error">❌ @formError</div> }
+        @if (!string.IsNullOrEmpty(formSuccess)) { <div class="im-alert im-alert-success">✅ @formSuccess</div> }
+    </div>
+
+    <!-- Roles Table -->
+    <div class="im-card">
+        <div class="im-card-title">Existing Roles</div>
+
+        @if (isLoading)
+        {
+            <div class="im-loading"><span class="im-spinner"></span> Loading...</div>
+        }
+        else if (!roles.Any())
+        {
+            <div class="im-empty">No roles found. Create one above.</div>
+        }
+        else
+        {
+            <table class="im-table">
+                <thead>
+                    <tr><th>#</th><th>Role Name</th><th>Actions</th></tr>
+                </thead>
+                <tbody>
+                    @foreach (var role in roles)
+                    {
+                        <tr>
+                            <td>@role.Id</td>
+                            <td>
+                                @if (editingRoleId == role.Id)
+                                {
+                                    <input class="im-input im-input-inline" @bind="editRoleName" />
+                                }
+                                else
+                                {
+                                    @role.Name
+                                }
+                            </td>
+                            <td class="im-actions">
+                                @if (editingRoleId == role.Id)
+                                {
+                                    <button class="im-btn-sm im-btn-success" @onclick="() => SaveEdit(role.Id)">💾 Save</button>
+                                    <button class="im-btn-sm im-btn-secondary" @onclick="CancelEdit">Cancel</button>
+                                }
+                                else
+                                {
+                                    <button class="im-btn-sm im-btn-edit" @onclick="() => StartEdit(role)">✏️ Edit</button>
+                                    <button class="im-btn-sm im-btn-danger" @onclick="() => DeleteRole(role.Id)">🗑️ Delete</button>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+
+</div>
+
+@code {
+    private List<ApplicationRole> roles = new();
+    private bool isLoading = true;
+    private bool isBusy = false;
+    private string newRoleName = "";
+    private string formError = "";
+    private string formSuccess = "";
+
+    // Inline edit state
+    private int editingRoleId = 0;
+    private string editRoleName = "";
+
+    protected override async Task OnInitializedAsync() => await LoadRoles();
+
+    private async Task LoadRoles()
+    {
+        isLoading = true;
+        roles = await IdentityService.GetAllRolesAsync();
+        isLoading = false;
+    }
+
+    private async Task CreateRole()
+    {
+        formError = ""; formSuccess = "";
+        if (string.IsNullOrWhiteSpace(newRoleName)) { formError = "Role name is required."; return; }
+
+        isBusy = true;
+        var (ok, err) = await IdentityService.CreateRoleAsync(newRoleName);
+        isBusy = false;
+
+        if (ok) { formSuccess = $"Role '{newRoleName}' created."; newRoleName = ""; await LoadRoles(); }
+        else    { formError = err; }
+    }
+
+    private void StartEdit(ApplicationRole role)
+    {
+        editingRoleId = role.Id;
+        editRoleName  = role.Name ?? "";
+        formError = ""; formSuccess = "";
+    }
+
+    private void CancelEdit() { editingRoleId = 0; editRoleName = ""; }
+
+    private async Task SaveEdit(int roleId)
+    {
+        formError = ""; formSuccess = "";
+        var (ok, err) = await IdentityService.UpdateRoleAsync(roleId, editRoleName);
+        if (ok) { formSuccess = "Role updated."; editingRoleId = 0; await LoadRoles(); }
+        else    { formError = err; }
+    }
+
+    private async Task DeleteRole(int roleId)
+    {
+        formError = ""; formSuccess = "";
+        var (ok, err) = await IdentityService.DeleteRoleAsync(roleId);
+        if (ok) { formSuccess = "Role deleted."; await LoadRoles(); }
+        else    { formError = err; }
+    }
+}

@@ -1,0 +1,33 @@
+@inject NavigationManager Nav
+@rendermode InteractiveServer
+
+<div class="sidenav @(isExpanded ? "expanded" : "collapsed")">
+    <div class="sidenav-toggle" @onclick="ToggleSideNav">
+        <span class="toggle-icon">@(isExpanded ? "◀" : "▶")</span>
+    </div>
+    
+    <div class="sidenav-content">
+        <div class="nav-item" @onclick="NavigateToDashboard">
+            <div class="nav-icon">🏠</div>
+            @if (isExpanded)
+            {
+                <span class="nav-text">Dashboard</span>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    private bool isExpanded = true;
+
+    private void ToggleSideNav()
+    {
+        isExpanded = !isExpanded;
+        StateHasChanged();
+    }
+
+    private void NavigateToDashboard()
+    {
+        Nav.NavigateTo("/dashboard");
+    }
+}

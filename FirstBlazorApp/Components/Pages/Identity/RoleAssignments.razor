@@ -1,0 +1,132 @@
+@*
+    RoleAssignments.razor — manages AspNetUserRoles via UserManager.
+    Select a user, see their current roles, assign or remove roles.
+    No hardcoded policy attribute — authorization is fully dynamic.
+*@
+@page "/users/role-assignments"
+@layout Layout.AuthenticatedLayout
+@attribute [Authorize]
+@using FirstBlazorApp.Services.IService
+@inject IIdentityService IdentityService
+@inject NavigationManager Nav
+@rendermode InteractiveServer
+
+<div class="im-page">
+
+    <div class="im-header">
+        <button class="im-back-btn" @onclick='() => Nav.NavigateTo("/users")'>← Back</button>
+        <h1 class="im-title">👥 Role Assignments</h1>
+        <span class="im-subtitle">AspNetUserRoles table</span>
+    </div>
+
+    <!-- User Selector -->
+    <div class="im-card">
+        <div class="im-card-title">Select User</div>
+        <div class="im-form-row">
+            <select class="im-select" @bind="selectedUserId" @bind:after="OnUserSelected">
+                <option value="0">-- Select a user --</option>
+                @foreach (var u in allUsers)
+                {
+                    <option value="@u.Id">@u.UserName (@u.Email)</option>
+                }
+            </select>
+        </div>
+    </div>
+
+    @if (selectedUserId > 0)
+    {
+        <!-- Assign Role -->
+        <div class="im-card">
+            <div class="im-card-title">Assign Role</div>
+            <div class="im-form-row">
+                <select class="im-select" @bind="selectedRoleName">
+                    <option value="">-- Select a role --</option>
+                    @foreach (var r in allRoles)
+                    {
+                        <option value="@r.Name">@r.Name</option>
+                    }
+                </select>
+                <button class="im-btn-primary" @onclick="AssignRole" disabled="@isBusy">
+                    @if (isBusy) { <span class="im-spinner"></span> } else { <span>➕ Assign</span> }
+                </button>
+            </div>
+            @if (!string.IsNullOrEmpty(formError))   { <div class="im-alert im-alert-error">❌ @formError</div> }
+            @if (!string.IsNullOrEmpty(formSuccess)) { <div class="im-alert im-alert-success">✅ @formSuccess</div> }
+        </div>
+
+        <!-- Current Roles -->
+        <div class="im-card">
+            <div class="im-card-title">Current Roles for <strong>@(allUsers.FirstOrDefault(u => u.Id == selectedUserId)?.UserName)</strong></div>
+            @if (!userRoles.Any())
+            {
+                <div class="im-empty">No roles assigned yet.</div>
+            }
+            else
+            {
+                <table class="im-table">
+                    <thead><tr><th>Role Name</th><th>Action</th></tr></thead>
+                    <tbody>
+                        @foreach (var role in userRoles)
+                        {
+                            <tr>
+                                <td>@role</td>
+                                <td>
+                                    <button class="im-btn-sm im-btn-danger" @onclick="() => RemoveRole(role)">🗑️ Remove</button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+    }
+
+</div>
+
+@code {
+    private List<ApplicationUser> allUsers = new();
+    private List<ApplicationRole> allRoles = new();
+    private List<string> userRoles = new();
+
+    private int selectedUserId = 0;
+    private string selectedRoleName = "";
+    private bool isBusy = false;
+    private string formError = "";
+    private string formSuccess = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        allUsers = await IdentityService.GetAllUsersAsync();
+        allRoles = await IdentityService.GetAllRolesAsync();
+    }
+
+    private async Task OnUserSelected()
+    {
+        formError = ""; formSuccess = "";
+        if (selectedUserId > 0)
+            userRoles = await IdentityService.GetUserRolesAsync(selectedUserId);
+        else
+            userRoles = new();
+    }
+
+    private async Task AssignRole()
+    {
+        formError = ""; formSuccess = "";
+        if (string.IsNullOrEmpty(selectedRoleName)) { formError = "Please select a role."; return; }
+
+        isBusy = true;
+        var (ok, err) = await IdentityService.AssignRoleAsync(selectedUserId, selectedRoleName);
+        isBusy = false;
+
+        if (ok) { formSuccess = $"Role '{selectedRoleName}' assigned."; userRoles = await IdentityService.GetUserRolesAsync(selectedUserId); }
+        else    { formError = err; }
+    }
+
+    private async Task RemoveRole(string roleName)
+    {
+        formError = ""; formSuccess = "";
+        var (ok, err) = await IdentityService.RemoveRoleAsync(selectedUserId, roleName);
+        if (ok) { formSuccess = $"Role '{roleName}' removed."; userRoles = await IdentityService.GetUserRolesAsync(selectedUserId); }
+        else    { formError = err; }
+    }
+}

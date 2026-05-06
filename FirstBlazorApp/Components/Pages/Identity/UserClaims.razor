@@ -1,0 +1,130 @@
+@*
+    UserClaims.razor — manages AspNetUserClaims via UserManager.
+    Select a user, view their direct claims, add or remove claims.
+    No hardcoded policy attribute — authorization is fully dynamic.
+*@
+@page "/users/user-claims"
+@layout Layout.AuthenticatedLayout
+@attribute [Authorize]
+@using System.Security.Claims
+@using FirstBlazorApp.Services.IService
+@inject IIdentityService IdentityService
+@inject NavigationManager Nav
+@rendermode InteractiveServer
+
+<div class="im-page">
+
+    <div class="im-header">
+        <button class="im-back-btn" @onclick='() => Nav.NavigateTo("/users")'>← Back</button>
+        <h1 class="im-title">🪪 User Claims</h1>
+        <span class="im-subtitle">AspNetUserClaims table</span>
+    </div>
+
+    <!-- User Selector -->
+    <div class="im-card">
+        <div class="im-card-title">Select User</div>
+        <select class="im-select" @bind="selectedUserId" @bind:after="OnUserSelected">
+            <option value="0">-- Select a user --</option>
+            @foreach (var u in allUsers)
+            {
+                <option value="@u.Id">@u.UserName (@u.Email)</option>
+            }
+        </select>
+    </div>
+
+    @if (selectedUserId > 0)
+    {
+        <!-- Add Claim Form -->
+        <div class="im-card">
+            <div class="im-card-title">Add Claim to User</div>
+            <div class="im-form-row">
+                <input class="im-input" placeholder="Claim Type (e.g. permission)" @bind="newClaimType" />
+                <input class="im-input" placeholder="Claim Value (e.g. CanReadReports)" @bind="newClaimValue" />
+                <button class="im-btn-primary" @onclick="AddClaim" disabled="@isBusy">
+                    @if (isBusy) { <span class="im-spinner"></span> } else { <span>➕ Add</span> }
+                </button>
+            </div>
+            @if (!string.IsNullOrEmpty(formError))   { <div class="im-alert im-alert-error">❌ @formError</div> }
+            @if (!string.IsNullOrEmpty(formSuccess)) { <div class="im-alert im-alert-success">✅ @formSuccess</div> }
+        </div>
+
+        <!-- Claims Table -->
+        <div class="im-card">
+            <div class="im-card-title">Direct Claims for <strong>@(allUsers.FirstOrDefault(u => u.Id == selectedUserId)?.UserName)</strong></div>
+            @if (!userClaims.Any())
+            {
+                <div class="im-empty">No direct claims on this user yet.</div>
+            }
+            else
+            {
+                <table class="im-table">
+                    <thead><tr><th>Claim Type</th><th>Claim Value</th><th>Action</th></tr></thead>
+                    <tbody>
+                        @foreach (var c in userClaims)
+                        {
+                            <tr>
+                                <td><span class="im-badge">@c.Type</span></td>
+                                <td>@c.Value</td>
+                                <td>
+                                    <button class="im-btn-sm im-btn-danger" @onclick="() => RemoveClaim(c)">🗑️ Remove</button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+    }
+
+</div>
+
+@code {
+    private List<ApplicationUser> allUsers = new();
+    private List<Claim> userClaims = new();
+
+    private int selectedUserId = 0;
+    private string newClaimType = "";
+    private string newClaimValue = "";
+    private bool isBusy = false;
+    private string formError = "";
+    private string formSuccess = "";
+
+    protected override async Task OnInitializedAsync()
+        => allUsers = await IdentityService.GetAllUsersAsync();
+
+    private async Task OnUserSelected()
+    {
+        formError = ""; formSuccess = "";
+        if (selectedUserId > 0)
+            userClaims = await IdentityService.GetUserClaimsAsync(selectedUserId);
+        else
+            userClaims = new();
+    }
+
+    private async Task AddClaim()
+    {
+        formError = ""; formSuccess = "";
+        if (string.IsNullOrWhiteSpace(newClaimType) || string.IsNullOrWhiteSpace(newClaimValue))
+        { formError = "Both claim type and value are required."; return; }
+
+        isBusy = true;
+        var (ok, err) = await IdentityService.AddUserClaimAsync(selectedUserId, newClaimType, newClaimValue);
+        isBusy = false;
+
+        if (ok)
+        {
+            formSuccess = "Claim added.";
+            newClaimType = ""; newClaimValue = "";
+            userClaims = await IdentityService.GetUserClaimsAsync(selectedUserId);
+        }
+        else { formError = err; }
+    }
+
+    private async Task RemoveClaim(Claim claim)
+    {
+        formError = ""; formSuccess = "";
+        var (ok, err) = await IdentityService.RemoveUserClaimAsync(selectedUserId, claim.Type, claim.Value);
+        if (ok) { formSuccess = "Claim removed."; userClaims = await IdentityService.GetUserClaimsAsync(selectedUserId); }
+        else    { formError = err; }
+    }
+}

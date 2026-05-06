@@ -1,0 +1,463 @@
+@page "/license"
+@layout Layout.AuthenticatedLayout
+@attribute [Authorize(Policy = "Permission:LicenseAccess")]
+@using System.Security.Claims
+@using FirstBlazorApp.Services.IService
+@using FirstBlazorApp.Models
+@using FirstBlazorApp.Models.Custom_Models
+@using Microsoft.JSInterop
+@using Microsoft.AspNetCore.Authorization
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IHttpContextAccessor HttpContextAccessor
+@inject ILicenseService service
+@inject IJSRuntime JSRuntime
+@inject IEncryptionService encryptionService
+@inject NavigationManager Nav
+@rendermode InteractiveServer
+
+@if (isProcessing && string.IsNullOrEmpty(successMessage) && string.IsNullOrEmpty(errorMessage))
+{
+    <div class="page-loader-overlay">
+        <div class="page-loader">
+            <div class="loader-spinner"></div>
+            <div class="loader-text">Loading...</div>
+        </div>
+    </div>
+}
+
+<div class="license-card">
+        <h1 class="license-title">Enterprise License Management</h1>
+        
+        <EditForm Model="licenseModel" class="license-form">
+            <DataAnnotationsValidator />
+            
+            <!-- Bank Selection -->
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="bank">Bank</label>
+                    <InputSelect @bind-Value="licenseModel.SelectedBank" class="form-select">
+                        <option value="">-- Select Bank --</option>
+                        @foreach (var b in licenseModel.BankName)
+                        {
+                            <option value="@b.Id">@b.BankName</option>
+                        }
+                    </InputSelect>
+                    <ValidationMessage For="@(() => licenseModel.SelectedBank)" class="validation-error" />
+                </div>
+
+
+                <div class="form-group">
+                    <label for="expiryDate">Expiry Date</label>
+                    <input type="date" 
+                           id="expiryDate" 
+                           @bind="licenseModel.ExpiryDate" 
+                           class="form-input" 
+                           min="@DateTime.Now.ToString("yyyy-MM-dd")" 
+                            />
+                    <ValidationMessage For="@(() => licenseModel.ExpiryDate)" class="validation-error" />
+                </div>
+            </div>
+
+            <!-- Pass Phrase Section -->
+            <div class="form-group">
+                <label for="passPhrase">Pass Phrase</label>
+                <div class="pass-phrase-container">
+                    <input type="@(showPassPhrase ? "text" : "password")" 
+                           id="passPhrase" 
+                           @bind="licenseModel.PassPhrase" 
+                           class="form-input pass-phrase-input" 
+                           placeholder="Enter pass phrase"
+                           disabled="@(!licenseModel.GenerateKeyPair)" />
+                    <label class="show-pass-checkbox">
+                        <input type="checkbox" @bind="showPassPhrase" disabled="@(!licenseModel.GenerateKeyPair)" />
+                        <span class="checkmark"></span>
+                        Show Pass Phrase
+                    </label>
+                </div>
+                <ValidationMessage For="@(() => licenseModel.PassPhrase)" class="validation-error" />
+            </div>
+
+            <!-- Generate Key Pair Checkbox -->
+            <div class="form-group">
+                <label class="generate-key-checkbox">
+                    <input type="checkbox" @bind="licenseModel.GenerateKeyPair" />
+                    <span class="checkmark"></span>
+                    Generate Key Pair
+                </label>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="form-actions">
+
+                <AuthorizeView Policy="Permission:IssueLicense" Context="auth">
+                    <button type="submit"
+                            disabled="@(isProcessing ||
+                                                       (licenseModel.SelectedBank == 0 &&
+                                                        licenseModel.ExpiryDate == default(DateOnly) &&
+                                                        (!licenseModel.GenerateKeyPair || string.IsNullOrEmpty(licenseModel.PassPhrase))))"
+                            class="btn btn-primary" @onclick="CreateLicense">
+
+                        @if (isProcessing)
+                        {
+                            <div class="spinner"></div>
+                            <span>Creating License...</span>
+                        }
+                        else
+                        {
+                            <span>📄 Create License</span>
+                        }
+                    </button>
+                </AuthorizeView>
+
+                <AuthorizeView Policy="Permission:ViewLicensesList" Context="auth">
+                    <button type="button"
+                            @onclick="ViewLicensesList"
+                            class="btn btn-info">
+                        <span>📋 View Licenses List</span>
+                    </button>
+                </AuthorizeView>
+
+            </div>
+
+        </EditForm>
+
+        @if (!string.IsNullOrEmpty(successMessage))
+        {
+            <div class="success-message">
+                <span class="success-icon">✅</span>
+                @successMessage
+            </div>
+        }
+
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <div class="error-message">
+                <span class="error-icon">❌</span>
+                @errorMessage
+            </div>
+        }
+    </div>
+
+<!-- License Viewer Modal -->
+@if (showLicenseModal)
+{
+<div class="modal-overlay" @onclick="CloseLicensesModal">
+    <div class="modal-content" @onclick:stopPropagation="true">
+        <div class="modal-header">
+            <h3>📄 License Details</h3>
+            <button type="button" class="modal-close" @onclick="CloseLicensesModal">×</button>
+        </div>
+        <div class="modal-body">
+            @if (currentLicense != null)
+            {
+                <div class="license-details">
+                    <div class="detail-row">
+                        <strong>License ID:</strong>
+                        <span>@currentLicense.LicenseGuid</span>
+                    </div>
+                    <div class="detail-row">
+                        <strong>Bank:</strong>
+                        <span>@(licenseModel.BankName.FirstOrDefault(b => b.Id == currentLicense.BankId)?.BankName ?? "Unknown")</span>
+                    </div>
+                    <div class="detail-row">
+                        <strong>Created Date:</strong>
+                        <span>@currentLicense.CreatedDate.ToString("MM/dd/yyyy")</span>
+                    </div>
+                    <div class="detail-row">
+                        <strong>Expiry Date:</strong>
+                        <span>@currentLicense.ExpiryDate.ToString("MM/dd/yyyy")</span>
+                    </div>
+                    <div class="detail-row">
+                        <strong>Status:</strong>
+                        <span class="@(currentLicense.IsActive ? "status-active" : "status-inactive")">
+                            @(currentLicense.IsActive ? "Active" : "Inactive")
+                        </span>
+                    </div>
+                    <div class="detail-row">
+                        <strong>Pass Phrase:</strong>
+                        <span class="pass-phrase">@GetDecryptedPassPhrase(currentLicense.PassPhrase)</span>
+                    </div>
+                </div>
+                
+                @if (!string.IsNullOrEmpty(currentLicense.XmlFile))
+                {
+                    <div class="xml-section">
+                        <h4>License XML:</h4>
+                        <div class="xml-content">
+                            <pre>@currentLicense.XmlFile</pre>
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" @onclick="CloseLicensesModal">
+                Close
+            </button>
+        </div>
+    </div>
+</div>
+}
+
+<!-- Licenses List Modal -->
+@if (showLicensesListModal)
+{
+<div class="modal-overlay" @onclick="CloseLicensesListModal">
+    <div class="modal-content modal-large" @onclick:stopPropagation="true">
+        <div class="modal-header">
+            <h3>📋 All Licenses</h3>
+            <button type="button" class="modal-close" @onclick="CloseLicensesListModal">×</button>
+        </div>
+        <div class="modal-body">
+            @if (isLoadingLicenses)
+            {
+                <div class="loading-container">
+                    <div class="spinner"></div>
+                    <span>Loading licenses...</span>
+                </div>
+            }
+            else if (allLicenses == null || !allLicenses.Any())
+            {
+                <div class="empty-state">
+                    <div class="empty-icon">📄</div>
+                    <h4>No Licenses Found</h4>
+                    <p>There are no licenses created yet.</p>
+                </div>
+            }
+            else
+            {
+                <div class="licenses-table-container">
+                    <table class="licenses-table">
+                        <thead>
+                            <tr>
+                                <th>Bank Name</th>
+                                <th>Created Date</th>
+                                <th>Expiry Date</th>
+                                <th>License Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var license in allLicenses)
+                            {
+                                <tr>
+                                    <td class="bank-name">@(licenseModel.BankName.FirstOrDefault(b => b.Id == license.BankId)?.BankName ?? "Unknown")</td>
+                                    <td>@license.CreatedDate.ToString("MM/dd/yyyy")</td>
+                                    <td>@license.ExpiryDate.ToString("MM/dd/yyyy")</td>
+                                    <td>
+                                        <span class="status-badge @GetLicenseStatusClass(license)">
+                                            @GetLicenseStatus(license)
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <button type="button" class="btn-view-small" @onclick="() => ViewLicenseDetails(license)">
+                                            👁️ View
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" @onclick="CloseLicensesListModal">
+                Close
+            </button>
+        </div>
+    </div>
+</div>
+}
+
+@code {
+    private LicenseRequest licenseModel = new();
+    private string userFirstName = "";
+    private bool showPassPhrase = false;
+    private bool isProcessing = false;
+    private string successMessage = "";
+    private string errorMessage = "";
+    private string ExpiryDate = "";
+    private bool showViewLicenseButton = false;
+    private bool showLicenseModal = false;
+    private LicenseDetail? currentLicense = null;
+    private bool showLicensesListModal = false;
+    private List<LicenseDetail> allLicenses = new();
+    private bool isLoadingLicenses = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        isProcessing = true; // Show loader while loading initial data
+
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity?.IsAuthenticated == true)
+        {
+            userFirstName = user.FindFirst("FirstName")?.Value ?? "";
+        }
+
+        licenseModel.BankName = await service.GetBanksAsync();
+
+        isProcessing = false; 
+        StateHasChanged();
+    }
+
+    private async Task CreateLicense()
+    {
+        isProcessing = true;
+        errorMessage = "";
+        successMessage = "";
+
+        try
+        {
+            if (!string.IsNullOrEmpty(ExpiryDate) && DateTime.TryParse(ExpiryDate, out DateTime selectedDate))
+            {
+                licenseModel.ExpiryDate = DateOnly.FromDateTime(selectedDate);
+            }
+            var createdLicense = await service.IssueLicense(licenseModel);
+            if(createdLicense != null)
+            {
+                var selectedBank = licenseModel.BankName.FirstOrDefault(b => b.Id == createdLicense.BankId);
+                var bankName = selectedBank?.BankName ?? "Selected Bank";
+                successMessage = $"License created successfully for {bankName} with expiry date {createdLicense.ExpiryDate.ToString("MM/dd/yyyy")}";
+
+                // Clear the form but keep the success message
+                await Task.Delay(20);
+                ClearFormData();
+            }
+            else
+            {
+                errorMessage = "Failed to create license";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to create license: {ex.Message}";
+        }
+        finally
+        {
+            isProcessing = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task ClearFormData()
+    {
+        licenseModel = new LicenseRequest();
+        ExpiryDate = "";
+        // Reload banks after reset
+        licenseModel.BankName = await service.GetBanksAsync();
+        showPassPhrase = false;
+        // Don't clear success message here
+        StateHasChanged();
+    }
+
+    private async Task ViewLicensesList()
+    {
+        showLicensesListModal = true;
+        isLoadingLicenses = true;
+        StateHasChanged();
+
+        try
+        {
+            allLicenses = await service.GetAllLicensesAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to load licenses: {ex.Message}";
+            allLicenses = new List<LicenseDetail>();
+        }
+        finally
+        {
+            isLoadingLicenses = false;
+            StateHasChanged();
+        }
+    }
+
+    private void CloseLicensesListModal()
+    {
+        showLicensesListModal = false;
+        StateHasChanged();
+    }
+
+    private void ViewLicenseDetails(LicenseDetail license)
+    {
+        currentLicense = license;
+        showLicensesListModal = false;
+        showLicenseModal = true;
+        StateHasChanged();
+    }
+
+
+    private void CloseLicensesModal()
+    {
+        showLicenseModal = false;
+        StateHasChanged();
+    }
+
+    private string GetLicenseStatus(LicenseDetail license)
+    {
+        if (!license.IsActive)
+        {
+            return "Inactive";
+        }
+
+        var today = DateTime.Now.Date;
+        var expiryDate = license.ExpiryDate.Date;
+        var daysUntilExpiry = (expiryDate - today).Days;
+
+        if (daysUntilExpiry < 0)
+        {
+            return "Expired";
+        }
+        else if (daysUntilExpiry <= 30)
+        {
+            return $"Expiring Soon ({daysUntilExpiry} days)";
+        }
+        else
+        {
+            return "Active";
+        }
+    }
+
+    private string GetLicenseStatusClass(LicenseDetail license)
+    {
+        if (!license.IsActive)
+        {
+            return "status-inactive";
+        }
+
+        var today = DateTime.Now.Date;
+        var expiryDate = license.ExpiryDate.Date;
+        var daysUntilExpiry = (expiryDate - today).Days;
+
+        if (daysUntilExpiry < 0)
+        {
+            return "status-expired";
+        }
+        else if (daysUntilExpiry <= 30)
+        {
+            return "status-expiring-soon";
+        }
+        else
+        {
+            return "status-active";
+        }
+    }
+
+    private string GetDecryptedPassPhrase(string encryptedPassPhrase)
+    {
+        try
+        {
+            if (string.IsNullOrEmpty(encryptedPassPhrase))
+                return "N/A";
+            
+            return encryptionService.Decrypt(encryptedPassPhrase);
+        }
+        catch
+        {
+            return "Unable to decrypt";
+        }
+    }
+}

@@ -1,0 +1,15 @@
+﻿@inject NavigationManager Nav
+@inject AuthenticationStateProvider Auth
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        var state = await Auth.GetAuthenticationStateAsync();
+        var user = state.User;
+
+        if (user?.Identity?.IsAuthenticated == true)
+            Nav.NavigateTo("/not-authorized", forceLoad: true);
+        else
+            Nav.NavigateTo("/login", forceLoad: true);
+    }
+}

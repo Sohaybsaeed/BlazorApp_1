@@ -1,0 +1,12 @@
+@*
+    UserPermissions.razor — replaced by Identity Management.
+    Redirects to the new unified Identity & Permissions page.
+*@
+@page "/users/permissions"
+@inject NavigationManager Nav
+@rendermode InteractiveServer
+
+@code {
+    protected override void OnInitialized()
+        => Nav.NavigateTo("/users/identity-management", replace: true);
+}

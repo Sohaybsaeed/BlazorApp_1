@@ -1,0 +1,132 @@
+﻿@* @page "/Dashboard"
+ *@@using System.Security.Claims
+@inject IHttpContextAccessor HttpContextAccessor
+@inject NavigationManager Nav
+@* @attribute [Authorize] *@
+
+<div class="dashboard-container">
+    <div class="dashboard-header">
+        <div class="welcome-section">
+            <div class="user-avatar">
+                @if (!string.IsNullOrEmpty(userFirstName))
+                {
+                    <span>@userFirstName.Substring(0, 1).ToUpper()</span>
+                }
+                else
+                {
+                    <span>👤</span>
+                }
+            </div>
+            <div class="welcome-text">
+                <h1>Welcome back, @(!string.IsNullOrEmpty(userFirstName) ? userFirstName : "User")! 👋</h1>
+                <p>@userEmail</p>
+                <p><b>UserEmail (Session):</b> @HttpContextAccessor.HttpContext.Session.GetString("UserEmail")</p>
+                <p><b>LoggedInAtUtc (Session):</b> @HttpContextAccessor.HttpContext.Session.GetString("LoggedInAtUtc")</p>
+            </div>
+        </div>
+        <a href="/logout" class="logout-btn">
+            <span>🚪</span>
+            Logout
+        </a>
+    </div>
+
+    @if (!string.IsNullOrEmpty(successMessage))
+    {
+        <div class="success-banner">
+            <div class="success-content">
+                <span class="success-icon">✅</span>
+                @successMessage
+            </div>
+        </div>
+    }
+
+    <div class="dashboard-content">
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">📊</div>
+                <div class="stat-info">
+                    <h3>Dashboard</h3>
+                    <p>Main Overview</p>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">👤</div>
+                <div class="stat-info">
+                    <h3>User ID</h3>
+                    <p>@userId</p>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">🏢</div>
+                <div class="stat-info">
+                    <h3>Branch</h3>
+                    <p>@(!string.IsNullOrEmpty(branchCode) ? branchCode : "N/A")</p>
+                </div>
+            </div>
+
+            <a href="/license" class="stat-card clickable-card">
+                <div class="stat-icon">📄</div>
+                <div class="stat-info">
+                    <h3>License</h3>
+                    <p>Manage Licenses</p>
+                </div>
+            </a>
+        </div>
+
+        <div class="welcome-card">
+            <div class="success-icon">✅</div>
+            <h2>Successfully Authenticated!</h2>
+            <p>You now have secure access to the Enterprise Portal.</p>
+        </div>
+    </div>
+</div>
+
+@code {
+    private string userFirstName = "";
+    private string userLastName = "";
+    private string userName = "";
+    private string userEmail = "";
+    private string userId = "";
+    private string branchCode = "";
+    private string roleTemplateId = "";
+    private string successMessage = "";
+
+    protected override void OnInitialized()
+    {
+        var user = HttpContextAccessor.HttpContext?.User;
+
+        if (user?.Identity?.IsAuthenticated == true)
+        {
+            userFirstName = user.FindFirst("FirstName")?.Value ?? "";
+            userLastName = user.FindFirst("LastName")?.Value ?? "";
+            userName = user.FindFirst("UserName")?.Value ?? "";
+            userEmail = user.FindFirst("UserEmail")?.Value ?? "";
+            userId = user.FindFirst("UserId")?.Value ?? "";
+            branchCode = user.FindFirst("BranchCode")?.Value ?? "";
+            roleTemplateId = user.FindFirst("RoleTemplateId")?.Value ?? "";
+        }
+
+        // Check for success message from query parameters
+        var uri = Nav.ToAbsoluteUri(Nav.Uri);
+        var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
+        var success = query["success"];
+
+        if (!string.IsNullOrWhiteSpace(success))
+        {
+            successMessage = success switch
+            {
+                "login" => "Login successful! Welcome to the Enterprise Portal.",
+                _ => "Operation completed successfully."
+            };
+
+            // Auto-hide success message after 5 seconds
+            Task.Delay(2000).ContinueWith(_ =>
+            {
+                successMessage = "";
+                InvokeAsync(StateHasChanged);
+            });
+        }
+    }
+}

@@ -1,0 +1,157 @@
+@using System.Security.Claims
+@using FirstBlazorApp.Services.IService
+@inject IHttpContextAccessor HttpContextAccessor
+@inject NavigationManager Nav
+@rendermode InteractiveServer
+<script src="site.js"></script>
+<div class="main-layout">
+    <!-- Side Navigation -->
+    <div class="sidebar-nav">
+        <div class="nav-header">
+            <div class="brand-logo">
+                <div class="logo-icon">🏢</div>
+                <div class="brand-text">
+                    <h3>Enterprise Portal</h3>
+                    <p>Admin Dashboard</p>
+                </div>
+            </div>
+        </div>
+
+        <nav class="nav-menu">
+            <div class="nav-item @GetActiveClass("/dashboard")">
+                <NavLink href="/dashboard" class="nav-link d-flex align-items-center">
+                    <span class="nav-icon dashboard-icon me-2">⌂</span>
+                    <span class="nav-text">Dashboard</span>
+                </NavLink>
+            </div>
+
+            <div class="nav-item @GetActiveClass("/license")">
+                <NavLink href="/license" class="nav-link d-flex align-items-center">
+                    <span class="nav-icon license-icon me-2">📋</span>
+                    <span class="nav-text">License Management</span>
+                    <span class="nav-arrow ms-auto">›</span>
+                </NavLink>
+            </div>
+        
+            <!-- Users Menu with Submenu -->
+            <div class="nav-item users-dropdown @(showUsersSubmenu ? "active" : "") @GetUsersActiveClass()">
+                <div class="nav-link d-flex align-items-center" @onclick="ToggleUsersSubmenu">
+                    <div class="nav-icon users-icon me-2">👤</div>
+                    <span class="nav-text">Users</span>
+                    <div class="nav-arrow ms-auto @(showUsersSubmenu ? "expanded" : "")">@(showUsersSubmenu ? "▼" : "▶")</div>
+                </div>
+                
+                @if (showUsersSubmenu)
+                {
+                    <div class="submenu">
+                        <NavLink href="/users/create" class="@($"submenu-item {GetActiveClass("/users/create")}")">
+                            <span class="submenu-icon">➕</span>
+                            <span class="submenu-text">Create User</span>
+                        </NavLink>
+                        <NavLink href="/users/view" class="@($"submenu-item {GetActiveClass("/users/view")}")">
+                            <span class="submenu-icon">👥</span>
+                            <span class="submenu-text">View Users</span>
+                        </NavLink>
+                    </div>
+                }
+            </div>
+        </nav>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="main-content">
+        <!-- Top Header -->
+        <div class="page-header">
+            <div class="header-left">
+                @if (!HideBackButton)
+                {
+                    <button class="back-btn" @onclick="GoBack">
+                        <span class="back-icon">←</span>
+                    </button>
+                }
+                <div class="header-info">
+                    <span class="greeting">Good Day, <strong>@(!string.IsNullOrEmpty(userFirstName) ? userFirstName.ToUpper() : "SUPER")</strong></span>
+                    <div class="user-badge">@(!string.IsNullOrEmpty(userFirstName) ? userFirstName.Substring(0, 1).ToUpper() : "S")</div>
+                </div>
+            </div>
+            
+            <div class="header-right">
+                <button class="logout-btn" @onclick="Logout">
+                    <span class="logout-icon">🚪</span>
+                    <span class="logout-text">Logout</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Page Content -->
+        <div class="page-content">
+            @ChildContent
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter] public string? BackUrl { get; set; }
+    [Parameter] public bool HideBackButton { get; set; } = false;
+    
+    private bool showUsersSubmenu = false;
+    private string userFirstName = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Auto-expand users submenu if on users pages
+        CheckUsersSubmenuState();
+        
+        // Get user info
+        var user = HttpContextAccessor.HttpContext?.User;
+        if (user?.Identity?.IsAuthenticated == true)
+        {
+            userFirstName = user.FindFirst("FirstName")?.Value ?? "";
+        }
+    }
+
+    private string GetActiveClass(string path)
+    {
+        var currentPath = HttpContextAccessor.HttpContext?.Request.Path.Value?.ToLower() ?? "";
+        return currentPath.StartsWith(path.ToLower()) ? "active" : "";
+    }
+
+    private string GetUsersActiveClass()
+    {
+        var currentPath = HttpContextAccessor.HttpContext?.Request.Path.Value?.ToLower() ?? "";
+        return currentPath.StartsWith("/users") ? "active" : "";
+    }
+
+    private void ToggleUsersSubmenu()
+    {
+        showUsersSubmenu = !showUsersSubmenu;
+        StateHasChanged();
+    }
+
+    private void CheckUsersSubmenuState()
+    {
+        var currentPath = HttpContextAccessor.HttpContext?.Request.Path.Value?.ToLower() ?? "";
+        if (currentPath.StartsWith("/users"))
+        {
+            showUsersSubmenu = true;
+        }
+    }
+
+    private void GoBack()
+    {
+        if (!string.IsNullOrEmpty(BackUrl))
+        {
+            Nav.NavigateTo(BackUrl);
+        }
+        else
+        {
+            Nav.NavigateTo("/dashboard");
+        }
+    }
+
+    private void Logout()
+    {
+        Nav.NavigateTo("/logout");
+    }
+}

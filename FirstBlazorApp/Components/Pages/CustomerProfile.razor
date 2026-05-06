@@ -1,0 +1,12 @@
+@*
+    CustomerProfile.razor (old "Create Role Template") — replaced by Identity Management.
+    Redirects to the new unified Identity & Permissions page.
+*@
+@page "/users/customer-profile"
+@inject NavigationManager Nav
+@rendermode InteractiveServer
+
+@code {
+    protected override void OnInitialized()
+        => Nav.NavigateTo("/users/identity-management", replace: true);
+}

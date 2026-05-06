@@ -1,0 +1,225 @@
+@page "/users/create"
+@layout Layout.AuthenticatedLayout
+@attribute [Authorize]
+@using System.Security.Claims
+@inject IHttpContextAccessor HttpContextAccessor
+@inject NavigationManager Nav
+@inject IUserService UserService
+@inject IJSRuntime JS
+
+@rendermode InteractiveServer
+
+<div class="user-card">
+        <h1 class="user-title">👤 Create New User</h1>
+    @if (!string.IsNullOrEmpty(successMessage))
+    {
+        <div class="success-message">
+            <span class="success-icon">✅</span>
+            @successMessage
+        </div>
+    }
+
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="error-message">
+            <span class="error-icon">❌</span>
+            @errorMessage
+        </div>
+    }
+    <EditForm Model="userModel" OnValidSubmit="CreateUserAsync" class="user-form">
+            <DataAnnotationsValidator />
+            
+            <!-- Personal Information Section -->
+            <div class="form-section">
+                <h3 class="section-title">Personal Information</h3>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="firstName">First Name</label>
+                        <input type="text" id="firstName" @bind="userModel.FirstName" class="form-input" placeholder="Enter first name" />
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="lastName">Last Name</label>
+                        <input type="text" id="lastName" @bind="userModel.LastName" class="form-input" placeholder="Enter last name" />
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="email">Email Address</label>
+                        <input type="email" id="email" @bind="userModel.Email" class="form-input" placeholder="Enter email address" />
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="phoneNumber">Phone Number</label>
+                        <input type="tel" id="phoneNumber" @bind="userModel.PhoneNumber" class="form-input" placeholder="Enter phone number" />
+                    </div>
+                </div>
+            </div>
+
+            <!-- Account Information Section -->
+            <div class="form-section">
+                @* <h3 class="section-title">Account Information</h3> *@
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="roleTemplate">Role Template</label>
+                    <InputSelect @bind-Value="userModel.RoleTemplateId" class="form-select">
+                        <option value="">-- Select Role Template --</option>
+                        @foreach (var b in RoleTemplates)
+                        {
+                            <option value="@b.Value">@b.Text</option>
+                        }
+                    </InputSelect>
+                    <ValidationMessage For="@(() => userModel.RoleTemplateId)" class="validation-error" />
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="dateOfBirth">Date of Birth</label>
+                        <input type="date" id="dateOfBirth" @bind="userModel.DateOfBirth" class="form-input" />
+                    </div>
+                </div>
+            </div>
+
+            <!-- Security Section -->
+            <div class="form-section">
+                @* <h3 class="section-title">Security</h3> *@
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <div class="password-container">
+                            <input type="@(showPassword ? "text" : "password")" 
+                                   id="password" 
+                                   @bind="userModel.PasswordHash" 
+                                   class="form-input" 
+                                   placeholder="Enter password" />
+                            <label class="show-password-checkbox">
+                                <input type="checkbox" @bind="showPassword" />
+                                <span class="checkmark"></span>
+                                Show Password
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="confirmPassword">Confirm Password</label>
+                        <input type="@(showPassword ? "text" : "password")" 
+                               id="confirmPassword" 
+                               @bind="userModel.PasswordHash" 
+                               class="form-input" 
+                               placeholder="Confirm password" />
+                    </div>
+                </div>
+            </div>
+
+            <!-- Additional Information Section -->
+            <div class="form-section">
+                @* <h3 class="section-title">Additional Information</h3> *@
+                
+                <div class="form-row">
+         @*        <div class="form-group">
+                    <label for="firstName">User Name</label>
+                    <input type="text" id="userName" @bind="userModel.UserName" class="form-input" placeholder="Enter user name" />
+                </div> *@
+                    <div class="form-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" @bind="userModel.IsActive" />
+                            <span class="checkmark"></span>
+                            Active User
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="form-actions">
+                <button type="submit" disabled="@isProcessing" class="btn btn-primary">
+                    @if (isProcessing)
+                    {
+                        <div class="spinner"></div>
+                        <span>Creating User...</span>
+                    }
+                    else
+                    {
+                        <span>👤 Create User</span>
+                    }
+                </button>
+                
+                <button type="button" @onclick="ResetForm" class="btn btn-secondary">
+                    <span>🔄 Reset Form</span>
+                </button>
+            </div>
+        </EditForm>
+    </div>
+
+@code {
+    private ApplicationUser userModel = new();
+    private bool showPassword = false;
+    private bool isProcessing = false;
+    private string successMessage = "";
+    private string errorMessage = "";
+    private List<RoleTemplateDD>? RoleTemplates { get; set; } = new List<RoleTemplateDD>();
+    protected override async Task OnInitializedAsync()
+    {
+        isProcessing = true; // Show loader while loading initial data
+
+        RoleTemplates = await UserService.GetRoleTemplates();
+
+        isProcessing = false; 
+        StateHasChanged();
+    }
+
+    private void ResetForm()
+    {
+        userModel = new ApplicationUser();
+        showPassword = false;
+        errorMessage = "";
+        StateHasChanged();
+    }
+    private async Task CreateUserAsync()
+    {
+        isProcessing = true;
+        successMessage = "";
+        errorMessage = "";
+
+        try
+        {
+            var req = new ApplicationUser
+                {
+                    FirstName = userModel.FirstName,
+                    LastName = userModel.LastName,
+                    Email = userModel.Email,
+                    PhoneNumber = userModel.PhoneNumber,
+                    RoleTemplateId = userModel.RoleTemplateId,
+                    DateOfBirth = userModel.DateOfBirth,
+                    UserName = userModel.FirstName + userModel.LastName,
+                    IsActive = userModel.IsActive,
+                    PasswordHash = userModel.PasswordHash,
+
+                };
+
+            var result = await UserService.CreateUserAsync(req);
+
+            if (result.Success)
+            {
+                successMessage = "User created successfully.";
+                isProcessing = false;
+                await JS.InvokeVoidAsync("eval", "window.scrollTo({ top: 0, behavior: 'smooth' });");
+                ResetForm();
+            }
+            else
+            {
+                errorMessage = result.ErrorMessage;
+                isProcessing = false;
+                StateHasChanged();
+            }
+        }
+        catch(Exception ex)
+        {
+            errorMessage = ex.Message;
+            isProcessing = false;
+            StateHasChanged();
+        }
+    }
+}

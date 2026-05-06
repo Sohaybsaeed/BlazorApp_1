@@ -1,0 +1,59 @@
+@using System.Security.Claims
+@inject IHttpContextAccessor HttpContextAccessor
+@inject NavigationManager Nav
+
+<div class="page-header">
+    <div class="header-left">
+        @if (!HideBackButton)
+        {
+            <button class="back-btn" @onclick="GoBack">
+                <span class="back-icon">←</span>
+            </button>
+        }
+        <div class="header-info">
+            <span class="greeting">Good Day, <strong>@(!string.IsNullOrEmpty(userFirstName) ? userFirstName.ToUpper() : "SUPER")</strong></span>
+            <div class="user-badge">@(!string.IsNullOrEmpty(userFirstName) ? userFirstName.Substring(0, 1).ToUpper() : "S")</div>
+        </div>
+    </div>
+    
+    <div class="header-right">
+        <button class="logout-btn" @onclick="Logout">
+            <span class="logout-icon">🚪</span>
+            <span class="logout-text">Logout</span>
+        </button>
+    </div>
+</div>
+
+@code {
+    [Parameter] public string? BackUrl { get; set; }
+    [Parameter] public bool HideBackButton { get; set; } = false;
+    
+    private string userFirstName = "";
+
+    protected override void OnInitialized()
+    {
+        var user = HttpContextAccessor.HttpContext?.User;
+
+        if (user?.Identity?.IsAuthenticated == true)
+        {
+            userFirstName = user.FindFirst("FirstName")?.Value ?? "";
+        }
+    }
+
+    private void GoBack()
+    {
+        if (!string.IsNullOrEmpty(BackUrl))
+        {
+            Nav.NavigateTo(BackUrl);
+        }
+        else
+        {
+            Nav.NavigateTo("/dashboard");
+        }
+    }
+
+    private void Logout()
+    {
+        Nav.NavigateTo("/logout");
+    }
+}

@@ -1,0 +1,10 @@
+<License>
+  <Id>f05d8f83-89aa-485c-b23f-4d6090b9af2e</Id>
+  <Type>Standard</Type>
+  <Expiration>Wed, 06 May 2026 19:00:00 GMT</Expiration>
+  <Customer>
+    <Name>BankName</Name>
+    <Email>InvestBank</Email>
+  </Customer>
+  <Signature>MEQCIBvNFEQvkkfxiLDMXUjs5FXL1fNjVP5THEVOA6gD7pxDAiBSISqxqQ5n1H98GfmQj/5aBSdjBohJEN0+U3sajra9qw==</Signature>
+</License>

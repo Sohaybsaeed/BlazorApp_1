@@ -1,0 +1,495 @@
+@page "/users/list"
+@layout Layout.AuthenticatedLayout
+@attribute [Authorize]
+@using System.Security.Claims
+@using FirstBlazorApp.Services.IService
+@using FirstBlazorApp.Models
+@using FirstBlazorApp.Models.Custom_Models
+@inject IHttpContextAccessor HttpContextAccessor
+@inject NavigationManager Nav
+@inject IUserService UserService
+@inject IPermissionTemplateService PermissionTemplateService
+@rendermode InteractiveServer
+
+<div class="users-container">
+    <!-- Header Section -->
+    <div class="users-header">
+        <div class="header-left">
+            <button class="back-btn" @onclick="GoBack">
+                <span class="back-icon">←</span>
+            </button>
+            <div class="header-info">
+                <span class="greeting">Good Day, <strong>@(!string.IsNullOrEmpty(userFirstName) ? userFirstName.ToUpper() : "SUPER")</strong></span>
+                <div class="user-badge">@(!string.IsNullOrEmpty(userFirstName) ? userFirstName.Substring(0, 1).ToUpper() : "S")</div>
+            </div>
+        </div>
+        <div class="header-actions">
+            <button class="add-user-btn" @onclick="CreateNewUser">
+                <span>➕ Add New User</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="users-content">
+        <div class="users-card">
+            <div class="card-header">
+                <h1 class="users-title">👥 View And Edit Users</h1>
+            </div>
+            
+            @if (isLoading)
+            {
+                <div class="loading-container">
+                    <div class="spinner-large"></div>
+                    <span>Loading users...</span>
+                </div>
+            }
+            else if (allUsers == null || !allUsers.Any())
+            {
+                <div class="empty-state">
+                    <div class="empty-icon">👥</div>
+                    <h3>No Users Found</h3>
+                    <p>There are no users created yet.</p>
+                    <button class="btn btn-primary" @onclick="CreateNewUser">
+                        <span>➕ Create First User</span>
+                    </button>
+                </div>
+            }
+            else
+            {
+                <div class="users-table-container">
+                    <table class="users-table">
+                        <thead>
+                            <tr>
+                                <th>User</th>
+                                <th>Email</th>
+                                <th>Status</th>
+                                <th>Created Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var user in allUsers)
+                            {
+                                <tr>
+                                    <td class="user-info">
+                                        <div class="user-avatar">
+                                            @user.UserName.Substring(0, 1).ToUpper()
+                                        </div>
+                                        <div class="user-details">
+                                            <div class="user-name">@user.UserName</div>
+                                            <div class="user-username">@user.Email</div>
+                                        </div>
+                                    </td>
+                                    <td>@user.Email</td>
+                                    <td>
+                                        <span class="status-badge @(user.IsActive ? "status-active" : "status-inactive")">
+                                            @(user.IsActive ? "Active" : "Inactive")
+                                        </span>
+                                    </td>
+                                    <td>@user.CreatedDate.ToString("MM/dd/yyyy")</td>
+                                    <td class="actions-cell">
+                                        <button type="button" class="btn-action btn-view" @onclick="() => ViewUserDetails(user)">
+                                            👁️
+                                        </button>
+                                        <button type="button" class="btn-action btn-edit" @onclick="() => EditUser(user)">
+                                            ✏️
+                                        </button>
+                                        <button type="button" class="btn-action @(user.IsActive ? "btn-deactivate" : "btn-activate")" @onclick="() => ToggleUserStatus(user)">
+                                            @(user.IsActive ? "🚫" : "✅")
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- View User Modal -->
+@if (showViewModal && viewUserModel != null)
+{
+    <div class="modal-overlay" @onclick="CloseViewModal">
+        <div class="modal-content modal-large" @onclick:stopPropagation="true">
+            <div class="modal-header">
+                <h3>👁️ View User Details</h3>
+                <button type="button" class="modal-close" @onclick="CloseViewModal">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="view-user-details">
+                    <div class="detail-row">
+                        <div class="detail-group">
+                            <label>First Name</label>
+                            <div class="detail-value">@viewUserModel.FirstName</div>
+                        </div>
+                        <div class="detail-group">
+                            <label>Last Name</label>
+                            <div class="detail-value">@viewUserModel.LastName</div>
+                        </div>
+                    </div>
+
+                    <div class="detail-row">
+                        <div class="detail-group">
+                            <label>Email</label>
+                            <div class="detail-value">@viewUserModel.Email</div>
+                        </div>
+                        <div class="detail-group">
+                            <label>Phone</label>
+                            <div class="detail-value">@viewUserModel.PhoneNumber</div>
+                        </div>
+                    </div>
+
+                    <div class="detail-row">
+                        <div class="detail-group">
+                            <label>Role Template</label>
+                            <div class="detail-value">
+                                @{
+                                    var roleTemplate = roleTemplates?.FirstOrDefault(r => r.Id == viewUserModel.RoleTemplateId);
+                                    var roleName = roleTemplate?.TemplateName ?? "Not Assigned";
+                                }
+                                @roleName
+                            </div>
+                        </div>
+                        <div class="detail-group">
+                            <label>Date of Birth</label>
+                            <div class="detail-value">@(viewUserModel.DateOfBirth?.ToString("MM/dd/yyyy") ?? "Not Set")</div>
+                        </div>
+                    </div>
+
+                    <div class="detail-row">
+                        <div class="detail-group">
+                            <label>Status</label>
+                            <div class="detail-value">
+                                <span class="status-badge @(viewUserModel.IsActive ? "status-active" : "status-inactive")">
+                                    @(viewUserModel.IsActive ? "Active" : "Inactive")
+                                </span>
+                            </div>
+                        </div>
+                        <div class="detail-group">
+                            <label>Created Date</label>
+                            <div class="detail-value">@viewUserModel.CreatedDate.ToString("MM/dd/yyyy")</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" @onclick="CloseViewModal">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Edit User Modal -->
+@if (showEditModal && editUserModel != null)
+{
+    <div class="modal-overlay" @onclick="CloseEditModal">
+        <div class="modal-content modal-large" @onclick:stopPropagation="true">
+            <div class="modal-header">
+                <h3>✏️ Edit User</h3>
+                <button type="button" class="modal-close" @onclick="CloseEditModal">×</button>
+            </div>
+            <div class="modal-body">
+                @if (isEditLoading)
+                {
+                    <div class="loading-container">
+                        <div class="spinner"></div>
+                        <span>Loading user...</span>
+                    </div>
+                }
+                else
+                {
+                    <EditForm Model="editUserModel" OnValidSubmit="SaveUser" class="edit-user-form">
+                        <DataAnnotationsValidator />
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="firstName">First Name</label>
+                                <input id="firstName" class="form-input" @bind="editUserModel.FirstName" />
+                                <ValidationMessage For="@(() => editUserModel.FirstName)" class="validation-error" />
+                            </div>
+
+                            <div class="form-group">
+                                <label for="lastName">Last Name</label>
+                                <input id="lastName" class="form-input" @bind="editUserModel.LastName" />
+                                <ValidationMessage For="@(() => editUserModel.LastName)" class="validation-error" />
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="email">Email</label>
+                                <input id="email" class="form-input" @bind="editUserModel.Email" />
+                                <ValidationMessage For="@(() => editUserModel.Email)" class="validation-error" />
+                            </div>
+
+                            <div class="form-group">
+                                <label for="phone">Phone</label>
+                                <input id="phone" class="form-input" @bind="editUserModel.PhoneNumber" />
+                                <ValidationMessage For="@(() => editUserModel.PhoneNumber)" class="validation-error" />
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="roleTemplate">Role Template</label>
+                                <select id="roleTemplate" class="form-input" @bind="editUserModel.RoleTemplateId">
+                                    <option value="0">-- Select Role --</option>
+                                    @if (roleTemplates != null)
+                                    {
+                                        @foreach (var role in roleTemplates)
+                                        {
+                                            <option value="@role.Id">@role.TemplateName</option>
+                                        }
+                                    }
+                                </select>
+                                <ValidationMessage For="@(() => editUserModel.RoleTemplateId)" class="validation-error" />
+                            </div>
+
+                            <div class="form-group">
+                                <label for="dateOfBirth">Date of Birth</label>
+                                <input id="dateOfBirth" class="form-input" type="date" @bind="editUserModel.DateOfBirth" />
+                                <ValidationMessage For="@(() => editUserModel.DateOfBirth)" class="validation-error" />
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" @bind="editUserModel.IsActive" />
+                                    <span class="checkmark"></span>
+                                    Active
+                                </label>
+                            </div>
+                        </div>
+
+                        @if (!string.IsNullOrEmpty(successMessage))
+                        {
+                            <div class="success-message">
+                                <span class="success-icon">✅</span>
+                                @successMessage
+                            </div>
+                        }
+
+                        @if (!string.IsNullOrEmpty(errorMessage))
+                        {
+                            <div class="error-message">
+                                <span class="error-icon">❌</span>
+                                @errorMessage
+                            </div>
+                        }
+                    </EditForm>
+                }
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" @onclick="CloseEditModal">
+                    Cancel
+                </button>
+                <button type="button" class="btn btn-primary" @onclick="SaveUser" disabled="@(isSaving || isEditLoading)">
+                    @if (isSaving)
+                    {
+                        <div class="spinner"></div>
+                        <span>Saving...</span>
+                    }
+                    else
+                    {
+                        <span>💾 Save Changes</span>
+                    }
+                </button>
+            </div>
+        </div>
+    </div>
+}
+ 
+@code {
+    private string userFirstName = "";
+    private bool isLoading = true;
+    private List<ApplicationUser> allUsers = new();
+    
+    // View Modal Properties
+    private bool showViewModal = false;
+    private ApplicationUser? viewUserModel = null;
+    
+    // Edit Modal Properties
+    private bool showEditModal = false;
+    private ApplicationUser? editUserModel = null;
+    private bool isEditLoading = false;
+    private bool isSaving = false;
+    private string successMessage = "";
+    private string errorMessage = "";
+    private List<FirstBlazorApp.Models.PermissionTemplate> roleTemplates = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var user = HttpContextAccessor.HttpContext?.User;
+
+        if (user?.Identity?.IsAuthenticated == true)
+        {
+            userFirstName = user.FindFirst("FirstName")?.Value ?? "";
+        }
+
+        await LoadUsers();
+        await LoadRoleTemplates();
+    }
+
+    private async Task LoadUsers()
+    {
+        isLoading = true;
+        StateHasChanged();
+
+        try
+        {
+            allUsers = await UserService.GetUsersAsync();
+        }
+        catch (Exception)
+        {
+            allUsers = new List<ApplicationUser>();
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task LoadRoleTemplates()
+    {
+        try
+        {
+            var result = await PermissionTemplateService.GetAllActivePermissionTemplate();
+            if (result.IsSuccess && result.Data != null)
+            {
+                roleTemplates = result.Data;
+            }
+            else
+            {
+                roleTemplates = new List<FirstBlazorApp.Models.PermissionTemplate>();
+            }
+        }
+        catch (Exception)
+        {
+            roleTemplates = new List<FirstBlazorApp.Models.PermissionTemplate>();
+        }
+    }
+
+    private void GoBack()
+    {
+        Nav.NavigateTo("/dashboard");
+    }
+
+    private void CreateNewUser()
+    {
+        Nav.NavigateTo("/users/create");
+    }
+
+    private async Task ViewUserDetails(ApplicationUser user)
+    {
+        showViewModal = true;
+        viewUserModel = user;
+        StateHasChanged();
+    }
+
+    private void CloseViewModal()
+    {
+        showViewModal = false;
+        viewUserModel = null;
+        StateHasChanged();
+    }
+
+    private async Task EditUser(ApplicationUser user)
+    {
+        showEditModal = true;
+        isEditLoading = true;
+        successMessage = "";
+        errorMessage = "";
+        StateHasChanged();
+
+        try
+        {
+            editUserModel = await UserService.FindUserByUserIdAsync(user.Id.ToString());
+        }
+        catch (Exception)
+        {
+            errorMessage = "Failed to load user details.";
+            editUserModel = null;
+        }
+        finally
+        {
+            isEditLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private void CloseEditModal()
+    {
+        showEditModal = false;
+        editUserModel = null;
+        successMessage = "";
+        errorMessage = "";
+        StateHasChanged();
+    }
+
+    private async Task SaveUser()
+    {
+        if (editUserModel == null) return;
+
+        isSaving = true;
+        successMessage = "";
+        errorMessage = "";
+        StateHasChanged();
+
+        try
+        {
+            var result = await UserService.UpdateUserAsync(editUserModel);
+
+            if (result.Success)
+            {
+                successMessage = "User updated successfully.";
+                await LoadUsers();
+                
+                await Task.Delay(2000);
+                CloseEditModal();
+            }
+            else
+            {
+                errorMessage = result.ErrorMessage ?? "Failed to update user.";
+            }
+        }
+        catch (Exception)
+        {
+            errorMessage = "An error occurred while updating the user.";
+        }
+        finally
+        {
+            isSaving = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task ToggleUserStatus(ApplicationUser user)
+    {
+        try
+        {
+            user.IsActive = !user.IsActive;
+            
+            var result = await UserService.UpdateUserAsync(user);
+            
+            if (result.Success)
+            {
+                await LoadUsers();
+            }
+            else
+            {
+                user.IsActive = !user.IsActive;
+            }
+        }
+        catch (Exception)
+        {
+            user.IsActive = !user.IsActive;
+        }
+    }
+}

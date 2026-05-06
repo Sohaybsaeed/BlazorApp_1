@@ -1,0 +1,15 @@
+﻿@page "/logout"
+@layout Layout.MainLayout
+@using Microsoft.AspNetCore.Identity
+@inject SignInManager<ApplicationUser> SignInManager
+@inject NavigationManager Nav
+@inject IHttpContextAccessor HttpContextAccessor
+
+<p style="padding:16px;">Signing out...</p>
+
+@code {
+    protected override void OnInitialized()
+    {
+        Nav.NavigateTo("/auth/logout", forceLoad: true);
+    }
+}

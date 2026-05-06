@@ -1,0 +1,12 @@
+@*
+    RoleClaims.razor — redirects to the unified IdentityManagement page.
+    Role claims are now managed via the permissions matrix in /users/identity-management.
+*@
+@page "/users/role-claims"
+@inject NavigationManager Nav
+@rendermode InteractiveServer
+
+@code {
+    protected override void OnInitialized()
+        => Nav.NavigateTo("/users/identity-management", replace: true);
+}

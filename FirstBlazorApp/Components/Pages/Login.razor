@@ -1,0 +1,143 @@
+﻿@page "/"
+@page "/login"
+
+@using System.ComponentModel.DataAnnotations
+@using System.Security.Claims
+@using FirstBlazorApp.Models.Custom_Models
+@using Microsoft.AspNetCore.Authentication
+@using Microsoft.AspNetCore.Authentication.Cookies
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Identity.Data
+@using Microsoft.AspNetCore.Mvc
+@using static System.Net.WebRequestMethods
+
+@inject IUserService UserService
+@inject IHttpContextAccessor HttpContextAccessor
+@inject NavigationManager Nav
+
+<div class="login-container">
+    <div class="login-card">
+        <div class="login-header">
+            <div class="logo-container">
+                <div class="logo-icon">🏢</div>
+            </div>
+            <h2>Enterprise Portal</h2>
+            <p>Sign in to your account</p>
+        </div>
+
+        <form method="post" action="/auth/login" @formname="loginForm">
+
+            <div class="form-group">
+                <label for="email">
+                    <span class="label-icon">📧</span>
+                    Email Address
+                </label>
+                <input class="input" name="email" />
+            </div>
+
+            <div class="form-group">
+                <label for="password">
+                    <span class="label-icon">🔒</span>
+                    Password
+                </label>
+                <input class="input" name="password" type="password" />
+            </div>
+
+            @if (!string.IsNullOrWhiteSpace(error))
+            {
+                <div class="error-message">
+                    <span class="error-icon">⚠️</span>
+                    @error
+                </div>
+            }
+
+          @*   <button type="submit" disabled="@busy" class="login-button">
+                @if (busy)
+                {
+                    <div class="loader"></div>
+                    <span>Signing in...</span>
+                }
+                else
+                {
+                    <span>🚀 Sign In</span>
+                }
+            </button> *@
+            <button type="submit" id="loginBtn" class="login-button" onclick="showLoginLoader()">
+                <span id="btnText">🚀 Sign In</span>
+                <div id="btnLoader" class="login-loader d-none">
+                    <div class="login-spinner"></div>
+                    <span>Signing in...</span>
+                </div>
+            </button>
+
+        </form>
+
+        <div class="login-footer">
+            <p>Secure Enterprise Access</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    function showLoginLoader() {
+        // Small delay to ensure the click is registered
+        setTimeout(function() {
+            const btnText = document.getElementById('btnText');
+            const btnLoader = document.getElementById('btnLoader');
+            const loginBtn = document.getElementById('loginBtn');
+            
+            if (btnText && btnLoader && loginBtn) {
+                btnText.classList.add('d-none');
+                btnLoader.classList.remove('d-none');
+                loginBtn.disabled = true;
+            }
+        }, 50);
+    }
+    
+    // Alternative approach using form submit event
+    document.addEventListener('DOMContentLoaded', function() {
+        const loginForm = document.querySelector('form[action="/auth/login"]');
+        
+        if (loginForm) {
+            loginForm.addEventListener('submit', function(e) {
+                const btnText = document.getElementById('btnText');
+                const btnLoader = document.getElementById('btnLoader');
+                const loginBtn = document.getElementById('loginBtn');
+                
+                if (btnText && btnLoader && loginBtn) {
+                    btnText.classList.add('d-none');
+                    btnLoader.classList.remove('d-none');
+                    loginBtn.disabled = true;
+                }
+            });
+        }
+    });
+</script>
+
+@code {
+    private LoginModel model = new();
+    private string? error;
+    private bool busy;
+
+
+    protected override void OnInitialized()
+    {
+        var uri = Nav.ToAbsoluteUri(Nav.Uri);
+        var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
+
+        var errorCode = query["error"];
+
+        if (!string.IsNullOrWhiteSpace(errorCode))
+        {
+            error = errorCode switch
+            {
+                "invalid" => "Invalid email or password.",
+                "locked" => "Your account is locked. Try again later.",
+                "notallowed" => "Login not allowed. Email may not be confirmed.",
+                _ => "Login failed."
+            };
+        }
+    }
+}
+
+

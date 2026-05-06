@@ -1,0 +1,66 @@
+@inject IHttpContextAccessor HttpContextAccessor
+@inject NavigationManager Nav
+
+<div class="sidebar-nav">
+    <div class="nav-header">
+        <div class="brand-logo">
+            <div class="logo-icon">🏢</div>
+            <div class="brand-text">
+                <h3>Enterprise Portal</h3>
+                <p>Admin Dashboard</p>
+            </div>
+        </div>
+    </div>
+
+    <nav class="nav-menu">
+        <div class="nav-item @GetActiveClass("/dashboard")">
+            <NavLink href="/dashboard" class="nav-link d-flex align-items-center">
+                <span class="nav-icon dashboard-icon me-2">⌂</span>
+                <span class="nav-text">Dashboard</span>
+            </NavLink>
+        </div>
+
+        <div class="nav-item @GetActiveClass("/license")">
+            <NavLink href="/license" class="nav-link d-flex align-items-center">
+                <span class="nav-icon license-icon me-2">📋</span>
+                <span class="nav-text">License Management</span>
+                <span class="nav-arrow ms-auto">›</span>
+            </NavLink>
+        </div>
+
+        <div class="nav-item @GetUsersActiveClass()">
+            <NavLink href="/users" class="nav-link d-flex align-items-center">
+                <div class="nav-icon users-icon me-2">👤</div>
+                <span class="nav-text">Users</span>
+                <div class="nav-arrow ms-auto">›</div>
+            </NavLink>
+        </div>
+    </nav>
+
+    <!-- Logout Section -->
+    <div class="nav-footer">
+        <button class="logout-btn" @onclick="Logout">
+            <span class="logout-icon">🚪</span>
+            <span class="logout-text">Logout</span>
+        </button>
+    </div>
+</div>
+
+@code {
+    private string GetActiveClass(string path)
+    {
+        var currentPath = HttpContextAccessor.HttpContext?.Request.Path.Value?.ToLower() ?? "";
+        return currentPath.StartsWith(path.ToLower()) ? "active" : "";
+    }
+
+    private string GetUsersActiveClass()
+    {
+        var currentPath = HttpContextAccessor.HttpContext?.Request.Path.Value?.ToLower() ?? "";
+        return currentPath.StartsWith("/users") ? "active" : "";
+    }
+
+    private void Logout()
+    {
+        Nav.NavigateTo("/logout");
+    }
+}
