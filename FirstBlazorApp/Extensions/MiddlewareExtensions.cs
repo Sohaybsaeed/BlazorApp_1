@@ -8,7 +8,26 @@ namespace FirstBlazorApp.Extensions
         public static WebApplication UseConfiguredMiddlewares(this WebApplication app)
         {
             app.UseHttpsRedirection();
-            app.UseStaticFiles();
+
+            // Serve static files with correct headers for PWA
+            app.UseStaticFiles(new StaticFileOptions
+            {
+                OnPrepareResponse = ctx =>
+                {
+                    // Service worker must not be cached by browser (always fetch fresh)
+                    if (ctx.File.Name == "service-worker.js")
+                    {
+                        ctx.Context.Response.Headers["Cache-Control"] = "no-cache, no-store, must-revalidate";
+                        ctx.Context.Response.Headers["Pragma"] = "no-cache";
+                        ctx.Context.Response.Headers["Expires"] = "0";
+                    }
+                    // Manifest — short cache
+                    else if (ctx.File.Name == "manifest.json")
+                    {
+                        ctx.Context.Response.Headers["Cache-Control"] = "public, max-age=3600";
+                    }
+                }
+            });
 
             app.UseRouting();
 
@@ -19,6 +38,7 @@ namespace FirstBlazorApp.Extensions
             app.UseAntiforgery();
 
             app.MapAuthEndpoints();
+            app.MapPwaIcons();
 
             app.MapRazorComponents<App>()
                 .AddInteractiveServerRenderMode();

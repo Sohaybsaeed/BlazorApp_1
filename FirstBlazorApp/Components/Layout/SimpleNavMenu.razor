@@ -48,6 +48,15 @@
     </nav>
 
     <div class="nav-footer">
+        <!-- PWA Install Button — shown only when browser supports install prompt -->
+        <button id="pwa-install-btn"
+                class="pwa-install-btn"
+                style="display:none"
+                onclick="installPWA()">
+            <span>📲</span>
+            <span class="logout-text">Install App</span>
+        </button>
+
         <button class="logout-btn" @onclick="Logout">
             <span class="logout-icon">🚪</span>
             <span class="logout-text">Logout</span>

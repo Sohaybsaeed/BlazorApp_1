@@ -9,16 +9,92 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <base href="/" />
+
+    <!-- ── PWA Meta Tags ── -->
+    <meta name="application-name" content="Enterprise Portal" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="EntPortal" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="theme-color" content="#6366f1" />
+    <meta name="msapplication-TileColor" content="#6366f1" />
+    <meta name="msapplication-TileImage" content="/icons/icon-144x144.png" />
+    <meta name="description" content="Enterprise Operations & User Management Portal" />
+
+    <!-- ── PWA Manifest ── -->
+    <link rel="manifest" href="/manifest.json" />
+
+    <!-- ── Apple Touch Icons ── -->
+    <link rel="apple-touch-icon" sizes="152x152" href="/icons/icon-152x152.png" />
+    <link rel="apple-touch-icon" sizes="192x192" href="/icons/icon-192x192.png" />
+
+    <!-- ── Favicon ── -->
+    <link rel="icon" type="image/png" href="favicon.png" />
+
+    <!-- ── Stylesheets ── -->
     <link rel="stylesheet" href="bootstrap/bootstrap.min.css" />
     <link rel="stylesheet" href="app.css" />
     <link rel="stylesheet" href="FirstBlazorApp.styles.css" />
-    <link rel="icon" type="image/png" href="favicon.png" />
+
     <HeadOutlet @rendermode="RenderMode.InteractiveServer" />
 </head>
 
 <body>
     <Routes @rendermode="RenderMode.InteractiveServer" />
     <script src="_framework/blazor.web.js"></script>
+
+    <!-- ── PWA Service Worker Registration ── -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function () {
+                navigator.serviceWorker.register('/service-worker.js')
+                    .then(function (reg) {
+                        console.log('[PWA] Service Worker registered. Scope:', reg.scope);
+
+                        // Check for updates
+                        reg.addEventListener('updatefound', function () {
+                            const newWorker = reg.installing;
+                            newWorker.addEventListener('statechange', function () {
+                                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                    console.log('[PWA] New version available. Refresh to update.');
+                                }
+                            });
+                        });
+                    })
+                    .catch(function (err) {
+                        console.warn('[PWA] Service Worker registration failed:', err);
+                    });
+            });
+        }
+
+        // PWA Install prompt — capture and expose for custom install button
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', function (e) {
+            e.preventDefault();
+            deferredPrompt = e;
+            // Show install button if you have one
+            const installBtn = document.getElementById('pwa-install-btn');
+            if (installBtn) installBtn.style.display = 'flex';
+            console.log('[PWA] Install prompt ready.');
+        });
+
+        window.installPWA = function () {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then(function (result) {
+                    console.log('[PWA] User choice:', result.outcome);
+                    deferredPrompt = null;
+                    const installBtn = document.getElementById('pwa-install-btn');
+                    if (installBtn) installBtn.style.display = 'none';
+                });
+            }
+        };
+
+        window.addEventListener('appinstalled', function () {
+            console.log('[PWA] App installed successfully!');
+            deferredPrompt = null;
+        });
+    </script>
 </body>
 
 </html>

@@ -3,8 +3,32 @@
   "WorkspaceRootPath": "D:\\Projects\\blazor\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{908D65FE-4B80-4120-A682-4AAEA2FC114A}|FirstBlazorApp\\FirstBlazorApp.csproj|d:\\projects\\blazor\\firstblazorapp\\authorization\\dbpermissionhandler.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{908D65FE-4B80-4120-A682-4AAEA2FC114A}|FirstBlazorApp\\FirstBlazorApp.csproj|solutionrelative:firstblazorapp\\authorization\\dbpermissionhandler.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{908D65FE-4B80-4120-A682-4AAEA2FC114A}|FirstBlazorApp\\FirstBlazorApp.csproj|d:\\projects\\blazor\\firstblazorapp\\services\\service\\userservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{908D65FE-4B80-4120-A682-4AAEA2FC114A}|FirstBlazorApp\\FirstBlazorApp.csproj|solutionrelative:firstblazorapp\\services\\service\\userservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{908D65FE-4B80-4120-A682-4AAEA2FC114A}|FirstBlazorApp\\FirstBlazorApp.csproj|d:\\projects\\blazor\\firstblazorapp\\wwwroot\\icons\\create-icons.html||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{908D65FE-4B80-4120-A682-4AAEA2FC114A}|FirstBlazorApp\\FirstBlazorApp.csproj|solutionrelative:firstblazorapp\\wwwroot\\icons\\create-icons.html||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{908D65FE-4B80-4120-A682-4AAEA2FC114A}|FirstBlazorApp\\FirstBlazorApp.csproj|d:\\projects\\blazor\\firstblazorapp\\endpoints\\pwaiconendpoint.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{908D65FE-4B80-4120-A682-4AAEA2FC114A}|FirstBlazorApp\\FirstBlazorApp.csproj|solutionrelative:firstblazorapp\\endpoints\\pwaiconendpoint.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{908D65FE-4B80-4120-A682-4AAEA2FC114A}|FirstBlazorApp\\FirstBlazorApp.csproj|d:\\projects\\blazor\\firstblazorapp\\services\\service\\permissiontemplateservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{908D65FE-4B80-4120-A682-4AAEA2FC114A}|FirstBlazorApp\\FirstBlazorApp.csproj|solutionrelative:firstblazorapp\\services\\service\\permissiontemplateservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{908D65FE-4B80-4120-A682-4AAEA2FC114A}|FirstBlazorApp\\FirstBlazorApp.csproj|d:\\projects\\blazor\\firstblazorapp\\services\\service\\rolepermissioncheckerservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{908D65FE-4B80-4120-A682-4AAEA2FC114A}|FirstBlazorApp\\FirstBlazorApp.csproj|solutionrelative:firstblazorapp\\services\\service\\rolepermissioncheckerservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{908D65FE-4B80-4120-A682-4AAEA2FC114A}|FirstBlazorApp\\FirstBlazorApp.csproj|d:\\projects\\blazor\\firstblazorapp\\services\\service\\licenseservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{908D65FE-4B80-4120-A682-4AAEA2FC114A}|FirstBlazorApp\\FirstBlazorApp.csproj|solutionrelative:firstblazorapp\\services\\service\\licenseservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{908D65FE-4B80-4120-A682-4AAEA2FC114A}|FirstBlazorApp\\FirstBlazorApp.csproj|d:\\projects\\blazor\\firstblazorapp\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{908D65FE-4B80-4120-A682-4AAEA2FC114A}|FirstBlazorApp\\FirstBlazorApp.csproj|solutionrelative:firstblazorapp\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -14,7 +38,7 @@
       "DocumentGroups": [
         {
           "DockedHeight": 323,
-          "SelectedChildIndex": 3,
+          "SelectedChildIndex": 5,
           "Children": [
             {
               "$type": "Bookmark",
@@ -30,15 +54,93 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
-              "Title": "DbPermissionHandler.cs",
-              "DocumentMoniker": "D:\\Projects\\blazor\\FirstBlazorApp\\Authorization\\DbPermissionHandler.cs",
-              "RelativeDocumentMoniker": "FirstBlazorApp\\Authorization\\DbPermissionHandler.cs",
-              "ToolTip": "D:\\Projects\\blazor\\FirstBlazorApp\\Authorization\\DbPermissionHandler.cs",
-              "RelativeToolTip": "FirstBlazorApp\\Authorization\\DbPermissionHandler.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAcAAAA+AAAAAAAAAA==",
+              "DocumentIndex": 1,
+              "Title": "create-icons.html",
+              "DocumentMoniker": "D:\\Projects\\blazor\\FirstBlazorApp\\wwwroot\\icons\\create-icons.html",
+              "RelativeDocumentMoniker": "FirstBlazorApp\\wwwroot\\icons\\create-icons.html",
+              "ToolTip": "D:\\Projects\\blazor\\FirstBlazorApp\\wwwroot\\icons\\create-icons.html",
+              "RelativeToolTip": "FirstBlazorApp\\wwwroot\\icons\\create-icons.html",
+              "ViewState": "AgIAAEgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001512|",
+              "WhenOpened": "2026-05-07T11:44:25.612Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "PwaIconEndpoint.cs",
+              "DocumentMoniker": "D:\\Projects\\blazor\\FirstBlazorApp\\Endpoints\\PwaIconEndpoint.cs",
+              "RelativeDocumentMoniker": "FirstBlazorApp\\Endpoints\\PwaIconEndpoint.cs",
+              "ToolTip": "D:\\Projects\\blazor\\FirstBlazorApp\\Endpoints\\PwaIconEndpoint.cs",
+              "RelativeToolTip": "FirstBlazorApp\\Endpoints\\PwaIconEndpoint.cs",
+              "ViewState": "AgIAABkAAAAAAAAAAAAQwCoAAAAVAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-05-06T15:34:52.628Z",
+              "WhenOpened": "2026-05-07T11:29:46.232Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "UserService.cs",
+              "DocumentMoniker": "D:\\Projects\\blazor\\FirstBlazorApp\\Services\\Service\\UserService.cs",
+              "RelativeDocumentMoniker": "FirstBlazorApp\\Services\\Service\\UserService.cs",
+              "ToolTip": "D:\\Projects\\blazor\\FirstBlazorApp\\Services\\Service\\UserService.cs",
+              "RelativeToolTip": "FirstBlazorApp\\Services\\Service\\UserService.cs",
+              "ViewState": "AgIAAIAAAAAAAAAAAAA3wNUAAAANAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-07T11:04:14.009Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "PermissionTemplateService.cs",
+              "DocumentMoniker": "D:\\Projects\\blazor\\FirstBlazorApp\\Services\\Service\\PermissionTemplateService.cs",
+              "RelativeDocumentMoniker": "FirstBlazorApp\\Services\\Service\\PermissionTemplateService.cs",
+              "ToolTip": "D:\\Projects\\blazor\\FirstBlazorApp\\Services\\Service\\PermissionTemplateService.cs",
+              "RelativeToolTip": "FirstBlazorApp\\Services\\Service\\PermissionTemplateService.cs",
+              "ViewState": "AgIAADkAAAAAAAAAAAAowAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-07T11:04:04.867Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "RolePermissionCheckerService.cs",
+              "DocumentMoniker": "D:\\Projects\\blazor\\FirstBlazorApp\\Services\\Service\\RolePermissionCheckerService.cs",
+              "RelativeDocumentMoniker": "FirstBlazorApp\\Services\\Service\\RolePermissionCheckerService.cs",
+              "ToolTip": "D:\\Projects\\blazor\\FirstBlazorApp\\Services\\Service\\RolePermissionCheckerService.cs",
+              "RelativeToolTip": "FirstBlazorApp\\Services\\Service\\RolePermissionCheckerService.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-07T11:03:57.651Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "Program.cs",
+              "DocumentMoniker": "D:\\Projects\\blazor\\FirstBlazorApp\\Program.cs",
+              "RelativeDocumentMoniker": "FirstBlazorApp\\Program.cs",
+              "ToolTip": "D:\\Projects\\blazor\\FirstBlazorApp\\Program.cs",
+              "RelativeToolTip": "FirstBlazorApp\\Program.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABQAAAAKAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-07T11:03:36.658Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "LicenseService.cs",
+              "DocumentMoniker": "D:\\Projects\\blazor\\FirstBlazorApp\\Services\\Service\\LicenseService.cs",
+              "RelativeDocumentMoniker": "FirstBlazorApp\\Services\\Service\\LicenseService.cs",
+              "ToolTip": "D:\\Projects\\blazor\\FirstBlazorApp\\Services\\Service\\LicenseService.cs",
+              "RelativeToolTip": "FirstBlazorApp\\Services\\Service\\LicenseService.cs",
+              "ViewState": "AgIAAHsAAAAAAAAAAAAowCoAAAAoAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-07T11:03:15.672Z",
               "EditorCaption": ""
             }
           ]
