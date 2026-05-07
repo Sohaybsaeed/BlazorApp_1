@@ -1,7 +1,12 @@
 {
   "Version": 1,
-  "WorkspaceRootPath": "C:\\Users\\CBTMarib\\Downloads\\BlazorApplication\\BlazorApplication\\",
-  "Documents": [],
+  "WorkspaceRootPath": "D:\\Projects\\blazor\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{908D65FE-4B80-4120-A682-4AAEA2FC114A}|FirstBlazorApp\\FirstBlazorApp.csproj|d:\\projects\\blazor\\firstblazorapp\\authorization\\dbpermissionhandler.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{908D65FE-4B80-4120-A682-4AAEA2FC114A}|FirstBlazorApp\\FirstBlazorApp.csproj|solutionrelative:firstblazorapp\\authorization\\dbpermissionhandler.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
   "DocumentGroupContainers": [
     {
       "Orientation": 1,
@@ -9,7 +14,7 @@
       "DocumentGroups": [
         {
           "DockedHeight": 323,
-          "SelectedChildIndex": -1,
+          "SelectedChildIndex": 3,
           "Children": [
             {
               "$type": "Bookmark",
@@ -22,6 +27,19 @@
             {
               "$type": "Bookmark",
               "Name": "ST:130:0:{116d2292-e37d-41cd-a077-ebacac4c8cc4}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "DbPermissionHandler.cs",
+              "DocumentMoniker": "D:\\Projects\\blazor\\FirstBlazorApp\\Authorization\\DbPermissionHandler.cs",
+              "RelativeDocumentMoniker": "FirstBlazorApp\\Authorization\\DbPermissionHandler.cs",
+              "ToolTip": "D:\\Projects\\blazor\\FirstBlazorApp\\Authorization\\DbPermissionHandler.cs",
+              "RelativeToolTip": "FirstBlazorApp\\Authorization\\DbPermissionHandler.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAcAAAA+AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-06T15:34:52.628Z",
+              "EditorCaption": ""
             }
           ]
         }

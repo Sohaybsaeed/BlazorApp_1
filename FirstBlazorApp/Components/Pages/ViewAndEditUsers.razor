@@ -8,7 +8,7 @@
 @inject IHttpContextAccessor HttpContextAccessor
 @inject NavigationManager Nav
 @inject IUserService UserService
-@inject IPermissionTemplateService PermissionTemplateService
+@inject IIdentityService IdentityService
 @rendermode InteractiveServer
 
 <div class="users-container">
@@ -144,13 +144,9 @@
 
                     <div class="detail-row">
                         <div class="detail-group">
-                            <label>Role Template</label>
+                            <label>Role</label>
                             <div class="detail-value">
-                                @{
-                                    var roleTemplate = roleTemplates?.FirstOrDefault(r => r.Id == viewUserModel.RoleTemplateId);
-                                    var roleName = roleTemplate?.TemplateName ?? "Not Assigned";
-                                }
-                                @roleName
+                                @(identityRoles.FirstOrDefault(r => r.Id == viewUserModel.RoleTemplateId)?.Name ?? "Not Assigned")
                             </div>
                         </div>
                         <div class="detail-group">
@@ -236,15 +232,12 @@
 
                         <div class="form-row">
                             <div class="form-group">
-                                <label for="roleTemplate">Role Template</label>
+                                <label for="roleTemplate">Role</label>
                                 <select id="roleTemplate" class="form-input" @bind="editUserModel.RoleTemplateId">
                                     <option value="0">-- Select Role --</option>
-                                    @if (roleTemplates != null)
+                                    @foreach (var role in identityRoles)
                                     {
-                                        @foreach (var role in roleTemplates)
-                                        {
-                                            <option value="@role.Id">@role.TemplateName</option>
-                                        }
+                                        <option value="@role.Id">@role.Name</option>
                                     }
                                 </select>
                                 <ValidationMessage For="@(() => editUserModel.RoleTemplateId)" class="validation-error" />
@@ -310,30 +303,43 @@
     private bool isLoading = true;
     private List<ApplicationUser> allUsers = new();
     
-    // View Modal Properties
+    // View Modal
     private bool showViewModal = false;
     private ApplicationUser? viewUserModel = null;
     
-    // Edit Modal Properties
+    // Edit Modal
     private bool showEditModal = false;
     private ApplicationUser? editUserModel = null;
     private bool isEditLoading = false;
     private bool isSaving = false;
     private string successMessage = "";
     private string errorMessage = "";
-    private List<FirstBlazorApp.Models.PermissionTemplate> roleTemplates = new();
+
+    // Identity roles (AspNetRoles) — replaces old PermissionTemplate dropdown
+    private List<ApplicationRole> identityRoles = new();
 
     protected override async Task OnInitializedAsync()
     {
         var user = HttpContextAccessor.HttpContext?.User;
-
         if (user?.Identity?.IsAuthenticated == true)
         {
             userFirstName = user.FindFirst("FirstName")?.Value ?? "";
+
+            // Permission guard
+            var perms = user.Claims
+                .Where(c => string.Equals(c.Type, "permission", StringComparison.OrdinalIgnoreCase))
+                .Select(c => c.Value)
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+            if (perms.Count > 0 && !perms.Contains("ViewUsers") && !perms.Contains("EditUser"))
+            {
+                Nav.NavigateTo("/not-authorized", forceLoad: true);
+                return;
+            }
         }
 
         await LoadUsers();
-        await LoadRoleTemplates();
+        identityRoles = await IdentityService.GetAllRolesAsync();
     }
 
     private async Task LoadUsers()
@@ -353,26 +359,6 @@
         {
             isLoading = false;
             StateHasChanged();
-        }
-    }
-
-    private async Task LoadRoleTemplates()
-    {
-        try
-        {
-            var result = await PermissionTemplateService.GetAllActivePermissionTemplate();
-            if (result.IsSuccess && result.Data != null)
-            {
-                roleTemplates = result.Data;
-            }
-            else
-            {
-                roleTemplates = new List<FirstBlazorApp.Models.PermissionTemplate>();
-            }
-        }
-        catch (Exception)
-        {
-            roleTemplates = new List<FirstBlazorApp.Models.PermissionTemplate>();
         }
     }
 

@@ -13,6 +13,8 @@
     </div>
 
     <nav class="nav-menu">
+
+        <!-- Dashboard — always visible -->
         <div class="nav-item @GetActiveClass("/dashboard")">
             <NavLink href="/dashboard" class="nav-link d-flex align-items-center">
                 <span class="nav-icon dashboard-icon me-2">⌂</span>
@@ -20,14 +22,21 @@
             </NavLink>
         </div>
 
-        <div class="nav-item @GetActiveClass("/license")">
-            <NavLink href="/license" class="nav-link d-flex align-items-center">
-                <span class="nav-icon license-icon me-2">📋</span>
-                <span class="nav-text">License Management</span>
-                <span class="nav-arrow ms-auto">›</span>
-            </NavLink>
-        </div>
+        <!-- License Management
+             Show if: user has NO permission claims at all (not yet configured)
+                   OR user has at least one license-related permission claim -->
+        @if (ShowMenuItem("IssueLicense", "ViewLicensesList", "LicenseAccess"))
+        {
+            <div class="nav-item @GetActiveClass("/license")">
+                <NavLink href="/license" class="nav-link d-flex align-items-center">
+                    <span class="nav-icon license-icon me-2">📋</span>
+                    <span class="nav-text">License Management</span>
+                    <span class="nav-arrow ms-auto">›</span>
+                </NavLink>
+            </div>
+        }
 
+        <!-- Users — always visible to authenticated users -->
         <div class="nav-item @GetUsersActiveClass()">
             <NavLink href="/users" class="nav-link d-flex align-items-center">
                 <div class="nav-icon users-icon me-2">👤</div>
@@ -35,9 +44,9 @@
                 <div class="nav-arrow ms-auto">›</div>
             </NavLink>
         </div>
+
     </nav>
 
-    <!-- Logout Section -->
     <div class="nav-footer">
         <button class="logout-btn" @onclick="Logout">
             <span class="logout-icon">🚪</span>
@@ -59,8 +68,31 @@
         return currentPath.StartsWith("/users") ? "active" : "";
     }
 
-    private void Logout()
+    /// <summary>
+    /// Controls whether a menu section is visible.
+    ///
+    /// Logic:
+    ///   - If user is NOT authenticated → hide
+    ///   - If user has NO "permission" claims at all → show (not yet configured, show everything)
+    ///   - If user HAS permission claims → show only if at least one of the given
+    ///     actionMethodNames is present in their claims
+    /// </summary>
+    private bool ShowMenuItem(params string[] actionMethodNames)
     {
-        Nav.NavigateTo("/logout");
+        var user = HttpContextAccessor.HttpContext?.User;
+        if (user?.Identity?.IsAuthenticated != true) return false;
+
+        var permClaims = user.Claims
+            .Where(c => string.Equals(c.Type, "permission", StringComparison.OrdinalIgnoreCase))
+            .Select(c => c.Value)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        // No permissions configured yet → show all menu items (graceful fallback)
+        if (permClaims.Count == 0) return true;
+
+        // Has permissions → show only if user holds at least one matching permission
+        return actionMethodNames.Any(a => permClaims.Contains(a));
     }
+
+    private void Logout() => Nav.NavigateTo("/logout");
 }

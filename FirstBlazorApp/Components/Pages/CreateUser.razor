@@ -2,9 +2,11 @@
 @layout Layout.AuthenticatedLayout
 @attribute [Authorize]
 @using System.Security.Claims
+@using FirstBlazorApp.Services.IService
 @inject IHttpContextAccessor HttpContextAccessor
 @inject NavigationManager Nav
 @inject IUserService UserService
+@inject IIdentityService IdentityService
 @inject IJSRuntime JS
 
 @rendermode InteractiveServer
@@ -63,15 +65,15 @@
                 @* <h3 class="section-title">Account Information</h3> *@
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="roleTemplate">Role Template</label>
-                    <InputSelect @bind-Value="userModel.RoleTemplateId" class="form-select">
-                        <option value="">-- Select Role Template --</option>
-                        @foreach (var b in RoleTemplates)
-                        {
-                            <option value="@b.Value">@b.Text</option>
-                        }
-                    </InputSelect>
-                    <ValidationMessage For="@(() => userModel.RoleTemplateId)" class="validation-error" />
+                        <label for="roleTemplate">Role</label>
+                        <InputSelect @bind-Value="userModel.RoleTemplateId" class="form-select">
+                            <option value="0">-- Select Role --</option>
+                            @foreach (var r in identityRoles)
+                            {
+                                <option value="@r.Id">@r.Name</option>
+                            }
+                        </InputSelect>
+                        <ValidationMessage For="@(() => userModel.RoleTemplateId)" class="validation-error" />
                     </div>
                     
                     <div class="form-group">
@@ -159,14 +161,30 @@
     private bool isProcessing = false;
     private string successMessage = "";
     private string errorMessage = "";
-    private List<RoleTemplateDD>? RoleTemplates { get; set; } = new List<RoleTemplateDD>();
+    private List<ApplicationRole> identityRoles = new();
+
     protected override async Task OnInitializedAsync()
     {
-        isProcessing = true; // Show loader while loading initial data
+        // Permission guard — redirect if user lacks CreateUser permission
+        var user = HttpContextAccessor.HttpContext?.User;
+        if (user?.Identity?.IsAuthenticated == true)
+        {
+            var perms = user.Claims
+                .Where(c => string.Equals(c.Type, "permission", StringComparison.OrdinalIgnoreCase))
+                .Select(c => c.Value)
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
-        RoleTemplates = await UserService.GetRoleTemplates();
+            // If permissions are configured and CreateUser is not among them → deny
+            if (perms.Count > 0 && !perms.Contains("CreateUser"))
+            {
+                Nav.NavigateTo("/not-authorized", forceLoad: true);
+                return;
+            }
+        }
 
-        isProcessing = false; 
+        isProcessing = true;
+        identityRoles = await IdentityService.GetAllRolesAsync();
+        isProcessing = false;
         StateHasChanged();
     }
 
@@ -186,23 +204,30 @@
         try
         {
             var req = new ApplicationUser
-                {
-                    FirstName = userModel.FirstName,
-                    LastName = userModel.LastName,
-                    Email = userModel.Email,
-                    PhoneNumber = userModel.PhoneNumber,
-                    RoleTemplateId = userModel.RoleTemplateId,
-                    DateOfBirth = userModel.DateOfBirth,
-                    UserName = userModel.FirstName + userModel.LastName,
-                    IsActive = userModel.IsActive,
-                    PasswordHash = userModel.PasswordHash,
-
-                };
+            {
+                FirstName    = userModel.FirstName,
+                LastName     = userModel.LastName,
+                Email        = userModel.Email,
+                PhoneNumber  = userModel.PhoneNumber,
+                RoleTemplateId = userModel.RoleTemplateId,
+                DateOfBirth  = userModel.DateOfBirth,
+                UserName     = userModel.FirstName + userModel.LastName,
+                IsActive     = userModel.IsActive,
+                PasswordHash = userModel.PasswordHash,
+            };
 
             var result = await UserService.CreateUserAsync(req);
 
             if (result.Success)
             {
+                // Also assign the selected role to AspNetUserRoles via Identity
+                if (userModel.RoleTemplateId > 0)
+                {
+                    var selectedRole = identityRoles.FirstOrDefault(r => r.Id == userModel.RoleTemplateId);
+                    if (selectedRole?.Name != null)
+                        await IdentityService.AssignRoleAsync(result.Id, selectedRole.Name);
+                }
+
                 successMessage = "User created successfully.";
                 isProcessing = false;
                 await JS.InvokeVoidAsync("eval", "window.scrollTo({ top: 0, behavior: 'smooth' });");
@@ -215,7 +240,7 @@
                 StateHasChanged();
             }
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
             errorMessage = ex.Message;
             isProcessing = false;
