@@ -19,14 +19,8 @@
                 <span class="back-icon">←</span>
             </button>
             <div class="header-info">
-                <span class="greeting">Good Day, <strong>@(!string.IsNullOrEmpty(userFirstName) ? userFirstName.ToUpper() : "SUPER")</strong></span>
-                <div class="user-badge">@(!string.IsNullOrEmpty(userFirstName) ? userFirstName.Substring(0, 1).ToUpper() : "S")</div>
+                <h1 class="users-title">👥 View &amp; Edit Users</h1>
             </div>
-        </div>
-        <div class="header-actions">
-            <button class="add-user-btn" @onclick="CreateNewUser">
-                <span>➕ Add New User</span>
-            </button>
         </div>
     </div>
 
@@ -50,9 +44,6 @@
                     <div class="empty-icon">👥</div>
                     <h3>No Users Found</h3>
                     <p>There are no users created yet.</p>
-                    <button class="btn btn-primary" @onclick="CreateNewUser">
-                        <span>➕ Create First User</span>
-                    </button>
                 </div>
             }
             else
@@ -355,11 +346,6 @@
     private void GoBack()
     {
         Nav.NavigateTo("/dashboard");
-    }
-
-    private void CreateNewUser()
-    {
-        Nav.NavigateTo("/users/create");
     }
 
     private async Task ViewUserDetails(ApplicationUser user)

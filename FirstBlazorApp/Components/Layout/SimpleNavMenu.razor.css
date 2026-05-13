@@ -270,6 +270,81 @@
     box-shadow: 0 6px 16px rgba(102, 126, 234, 0.35);
 }
 
+/* ── Submenu (expandable groups) ── */
+.users-dropdown {
+    position: relative;
+}
+
+.users-dropdown .nav-link {
+    cursor: pointer;
+}
+
+.submenu {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 8px;
+    margin: 4px 0 8px 0;
+    padding: 6px 0;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e2e8f0;
+    backdrop-filter: blur(10px);
+    display: flex;
+    flex-direction: column;
+}
+
+.submenu-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px 10px 36px;
+    color: #475569;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    border-radius: 6px;
+    margin: 2px 8px;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.submenu-item:hover {
+    background: rgba(102, 126, 234, 0.1);
+    color: #667eea;
+    text-decoration: none;
+    transform: translateX(4px);
+}
+
+.submenu-item.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    font-weight: 600;
+}
+
+.submenu-icon {
+    font-size: 14px;
+    min-width: 16px;
+    flex-shrink: 0;
+}
+
+.submenu-text {
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.submenu-item.active .submenu-text {
+    font-weight: 600;
+    color: white;
+}
+
+.nav-arrow.expanded {
+    transform: rotate(90deg);
+    transition: transform 0.2s ease;
+}
+
 /* Logout Section */
 .nav-footer {
     padding: 20px 24px;

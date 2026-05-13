@@ -23,6 +23,7 @@ namespace FirstBlazorApp.Extensions
             services.AddScoped<IPermissionTemplateService, PermissionTemplateService>(); // kept — old pages still reference it
             services.AddScoped<IRolePermissionChecker, RolePermissionChecker>();         // now uses Identity claims
             services.AddScoped<IIdentityService, IdentityService>();
+            services.AddScoped<IDynamicMenuService, DynamicMenuService>();               // dynamic sidebar menu
             services.AddScoped<LicenseGenerator>();
         }
     }

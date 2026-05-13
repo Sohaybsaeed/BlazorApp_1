@@ -1,5 +1,7 @@
 @inject IHttpContextAccessor HttpContextAccessor
+@inject IDynamicMenuService MenuService
 @inject NavigationManager Nav
+@rendermode InteractiveServer
 
 <div class="sidebar-nav">
     <div class="nav-header">
@@ -15,48 +17,79 @@
     <nav class="nav-menu">
 
         <!-- Dashboard — always visible -->
-        <div class="nav-item @GetActiveClass("/dashboard")">
-            <NavLink href="/dashboard" class="nav-link d-flex align-items-center">
-                <span class="nav-icon dashboard-icon me-2">⌂</span>
-                <span class="nav-text">Dashboard</span>
+        <div class="snm-item @GetActiveClass("/dashboard")">
+            <NavLink href="/dashboard" class="snm-link">
+                <span class="snm-icon">⌂</span>
+                <span class="snm-label">Dashboard</span>
             </NavLink>
         </div>
 
-        <!-- License Management
-             Show if: user has NO permission claims at all (not yet configured)
-                   OR user has at least one license-related permission claim -->
-        @if (ShowMenuItem("IssueLicense", "ViewLicensesList", "LicenseAccess"))
+        @if (_menuGroups == null)
         {
-            <div class="nav-item @GetActiveClass("/license")">
-                <NavLink href="/license" class="nav-link d-flex align-items-center">
-                    <span class="nav-icon license-icon me-2">📋</span>
-                    <span class="nav-text">License Management</span>
-                    <span class="nav-arrow ms-auto">›</span>
-                </NavLink>
+            <div class="snm-item">
+                <span class="snm-link" style="opacity:0.4;cursor:default">
+                    <span class="snm-icon">⏳</span>
+                    <span class="snm-label">Loading...</span>
+                </span>
             </div>
         }
+        else
+        {
+            @foreach (var group in _menuGroups)
+            {
+                @if (group.Items.Count == 1)
+                {
+                    var item = group.Items[0];
+                    <div class="snm-item @GetActiveClass(item.NavigationUrl)">
+                        <NavLink href="@item.NavigationUrl" class="snm-link">
+                            <span class="snm-icon">@group.IconCode</span>
+                            <span class="snm-label">@group.DisplayName</span>
+                            <span class="snm-arrow">›</span>
+                        </NavLink>
+                    </div>
+                }
+                else
+                {
+                    var groupId = group.FormId.ToString() + group.DisplayName;
+                    var isExpanded = _expandedGroups.Contains(groupId);
+                    var isGroupActive = group.Items.Any(i => IsPathActive(i.NavigationUrl));
 
-        <!-- Users — always visible to authenticated users -->
-        <div class="nav-item @GetUsersActiveClass()">
-            <NavLink href="/users" class="nav-link d-flex align-items-center">
-                <div class="nav-icon users-icon me-2">👤</div>
-                <span class="nav-text">Users</span>
-                <div class="nav-arrow ms-auto">›</div>
-            </NavLink>
-        </div>
+                    <div class="snm-group">
+                        <div class="snm-item @(isGroupActive && !isExpanded ? "snm-active" : "")"
+                             @onclick="() => ToggleGroup(groupId)"
+                             style="cursor:pointer">
+                            <div class="snm-link">
+                                <span class="snm-icon">@group.IconCode</span>
+                                <span class="snm-label">@group.DisplayName</span>
+                                <span class="snm-arrow snm-arrow-rotate-@(isExpanded ? "down" : "right")">›</span>
+                            </div>
+                        </div>
+
+                        @if (isExpanded)
+                        {
+                            <div class="snm-submenu">
+                                @foreach (var item in group.Items)
+                                {
+                                    var subClass = "snm-sub-item " + GetActiveClass(item.NavigationUrl);
+                                    <NavLink href="@item.NavigationUrl" class="@subClass">
+                                        <span class="snm-sub-dot"></span>
+                                        <span class="snm-sub-label">@item.FunctionalityName</span>
+                                    </NavLink>
+                                }
+                            </div>
+                        }
+                    </div>
+                }
+            }
+        }
 
     </nav>
 
     <div class="nav-footer">
-        <!-- PWA Install Button — shown only when browser supports install prompt -->
-        <button id="pwa-install-btn"
-                class="pwa-install-btn"
-                style="display:none"
-                onclick="installPWA()">
+        <button id="pwa-install-btn" class="pwa-install-btn" style="display:none" onclick="installPWA()">
             <span>📲</span>
-            <span class="logout-text">Install App</span>
+            <span class="snm-label">Install App</span>
         </button>
-
         <button class="logout-btn" @onclick="Logout">
             <span class="logout-icon">🚪</span>
             <span class="logout-text">Logout</span>
@@ -64,43 +97,317 @@
     </div>
 </div>
 
+<style>
+    /* ── Sidebar shell ── */
+    .sidebar-nav {
+        width: 260px;
+        height: 100vh;
+        background: #ffffff;
+        position: fixed;
+        left: 0;
+        top: 0;
+        display: flex;
+        flex-direction: column;
+        box-shadow: 2px 0 12px rgba(0,0,0,0.08);
+        z-index: 1000;
+        overflow-y: auto;
+        border-right: 1px solid #e8ecf0;
+    }
+
+    /* ── Header ── */
+    .nav-header {
+        padding: 24px 20px;
+        border-bottom: 1px solid #f0f2f5;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    .brand-logo {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    .logo-icon {
+        font-size: 28px;
+        background: rgba(255,255,255,0.2);
+        padding: 10px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .brand-text h3 {
+        font-size: 16px;
+        font-weight: 700;
+        margin: 0;
+        color: #ffffff;
+        letter-spacing: -0.02em;
+    }
+    .brand-text p {
+        font-size: 12px;
+        margin: 2px 0 0 0;
+        color: rgba(255,255,255,0.75);
+        font-weight: 400;
+    }
+
+    /* ── Nav menu container ── */
+    .nav-menu {
+        flex: 1;
+        padding: 12px 0;
+    }
+
+    /* ── Group wrapper ── */
+    .snm-group {
+        margin: 2px 10px;
+    }
+
+    /* ── Single nav item ── */
+    .snm-item {
+        margin: 2px 10px;
+        border-radius: 10px;
+        transition: background 0.15s ease;
+    }
+    .snm-item:hover {
+        background: #f5f7ff;
+    }
+    .snm-item.active, .snm-item.snm-active {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    .snm-item.active .snm-label,
+    .snm-item.snm-active .snm-label {
+        color: #ffffff;
+        font-weight: 600;
+    }
+    .snm-item.active .snm-icon,
+    .snm-item.snm-active .snm-icon {
+        color: #ffffff;
+    }
+    .snm-item.active .snm-arrow,
+    .snm-item.snm-active .snm-arrow {
+        color: rgba(255,255,255,0.8);
+    }
+
+    /* ── Nav link row ── */
+    .snm-link {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 11px 14px;
+        text-decoration: none;
+        color: inherit;
+        border-radius: 10px;
+        width: 100%;
+    }
+    .snm-link:hover {
+        text-decoration: none;
+        color: inherit;
+    }
+
+    /* ── Icon ── */
+    .snm-icon {
+        font-size: 18px;
+        min-width: 22px;
+        text-align: center;
+        color: #64748b;
+        flex-shrink: 0;
+    }
+
+    /* ── Label ── */
+    .snm-label {
+        font-size: 14px;
+        font-weight: 500;
+        color: #374151;
+        flex: 1;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+
+    /* ── Arrow ── */
+    .snm-arrow {
+        font-size: 16px;
+        color: #9ca3af;
+        flex-shrink: 0;
+        transition: transform 0.2s ease;
+        display: inline-block;
+    }
+    .snm-arrow-rotate-down {
+        transform: rotate(90deg);
+        color: #667eea;
+    }
+    .snm-arrow-rotate-right {
+        transform: rotate(0deg);
+    }
+
+    /* ── Submenu container ── */
+    .snm-submenu {
+        display: flex;
+        flex-direction: column;
+        margin: 4px 0 6px 0;
+        padding: 4px 0;
+        background: #f8faff;
+        border-radius: 10px;
+        border: 1px solid #e8ecf0;
+        overflow: hidden;
+    }
+
+    /* ── Submenu item ── */
+    .snm-sub-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 9px 14px 9px 20px;
+        text-decoration: none;
+        color: #4b5563;
+        font-size: 13px;
+        font-weight: 500;
+        transition: all 0.15s ease;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .snm-sub-item:hover {
+        background: #eef2ff;
+        color: #667eea;
+        text-decoration: none;
+        padding-left: 24px;
+    }
+    .snm-sub-item.active {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: #ffffff;
+        font-weight: 600;
+    }
+    .snm-sub-item.active .snm-sub-dot {
+        background: #ffffff;
+    }
+
+    /* ── Submenu dot indicator ── */
+    .snm-sub-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #9ca3af;
+        flex-shrink: 0;
+        transition: background 0.15s ease;
+    }
+    .snm-sub-item:hover .snm-sub-dot {
+        background: #667eea;
+    }
+
+    /* ── Sub label ── */
+    .snm-sub-label {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    /* ── Section divider ── */
+    .snm-divider {
+        height: 1px;
+        background: #f0f2f5;
+        margin: 8px 16px;
+    }
+
+    /* ── Footer ── */
+    .nav-footer {
+        padding: 16px;
+        border-top: 1px solid #f0f2f5;
+    }
+    .logout-btn {
+        width: 100%;
+        background: #fee2e2;
+        color: #dc2626;
+        border: none;
+        padding: 10px 16px;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 14px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        transition: all 0.15s ease;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+    .logout-btn:hover {
+        background: #dc2626;
+        color: #ffffff;
+    }
+    .logout-icon { font-size: 16px; }
+    .logout-text { font-size: 14px; font-weight: 600; }
+
+    /* ── PWA button ── */
+    .pwa-install-btn {
+        width: 100%;
+        background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        color: white;
+        border: none;
+        padding: 10px 16px;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 14px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        margin-bottom: 8px;
+        transition: opacity 0.15s ease;
+    }
+    .pwa-install-btn:hover { opacity: 0.9; }
+
+    /* ── Scrollbar ── */
+    .sidebar-nav::-webkit-scrollbar { width: 4px; }
+    .sidebar-nav::-webkit-scrollbar-track { background: transparent; }
+    .sidebar-nav::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 4px; }
+
+    /* ── Responsive ── */
+    @@media (max-width: 768px) {
+        .sidebar-nav { width: 64px; }
+        .brand-text, .snm-label, .snm-arrow, .logout-text { display: none; }
+        .brand-logo { justify-content: center; }
+        .snm-link { justify-content: center; padding: 12px; }
+        .snm-item, .snm-group { margin: 2px 6px; }
+        .snm-submenu { display: none; }
+        .nav-footer { padding: 10px; }
+        .logout-btn { padding: 10px; min-width: 44px; }
+    }
+</style>
+
 @code {
+    private List<MenuGroupDto>? _menuGroups;
+    private HashSet<string> _expandedGroups = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _menuGroups = await MenuService.GetMenuForCurrentUserAsync();
+
+        // Auto-expand group that contains current path
+        var currentPath = HttpContextAccessor.HttpContext?.Request.Path.Value?.ToLower() ?? "";
+        foreach (var group in _menuGroups.Where(g => g.Items.Count > 1))
+        {
+            var key = group.FormId.ToString() + group.DisplayName;
+            if (group.Items.Any(i => currentPath.StartsWith(i.NavigationUrl.ToLower())))
+                _expandedGroups.Add(key);
+        }
+    }
+
+    private void ToggleGroup(string key)
+    {
+        if (!_expandedGroups.Remove(key))
+            _expandedGroups.Add(key);
+        StateHasChanged();
+    }
+
     private string GetActiveClass(string path)
+        => IsPathActive(path) ? "active" : "";
+
+    private bool IsPathActive(string path)
     {
+        if (string.IsNullOrEmpty(path)) return false;
         var currentPath = HttpContextAccessor.HttpContext?.Request.Path.Value?.ToLower() ?? "";
-        return currentPath.StartsWith(path.ToLower()) ? "active" : "";
-    }
-
-    private string GetUsersActiveClass()
-    {
-        var currentPath = HttpContextAccessor.HttpContext?.Request.Path.Value?.ToLower() ?? "";
-        return currentPath.StartsWith("/users") ? "active" : "";
-    }
-
-    /// <summary>
-    /// Controls whether a menu section is visible.
-    ///
-    /// Logic:
-    ///   - If user is NOT authenticated → hide
-    ///   - If user has NO "permission" claims at all → show (not yet configured, show everything)
-    ///   - If user HAS permission claims → show only if at least one of the given
-    ///     actionMethodNames is present in their claims
-    /// </summary>
-    private bool ShowMenuItem(params string[] actionMethodNames)
-    {
-        var user = HttpContextAccessor.HttpContext?.User;
-        if (user?.Identity?.IsAuthenticated != true) return false;
-
-        var permClaims = user.Claims
-            .Where(c => string.Equals(c.Type, "permission", StringComparison.OrdinalIgnoreCase))
-            .Select(c => c.Value)
-            .ToHashSet(StringComparer.OrdinalIgnoreCase);
-
-        // No permissions configured yet → show all menu items (graceful fallback)
-        if (permClaims.Count == 0) return true;
-
-        // Has permissions → show only if user holds at least one matching permission
-        return actionMethodNames.Any(a => permClaims.Contains(a));
+        return currentPath.StartsWith(path.ToLower());
     }
 
     private void Logout() => Nav.NavigateTo("/logout");

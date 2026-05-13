@@ -59,8 +59,9 @@ public partial class IBRetailDbContext : IdentityDbContext<ApplicationUser, Appl
         {
             entity.Property(e => e.ActionMethodName).HasMaxLength(50);
             entity.Property(e => e.MenuReferenceName).HasMaxLength(150);
-
             entity.Property(e => e.FunctionalityName).HasMaxLength(50);
+            entity.Property(e => e.MenuGroupName).HasMaxLength(100);
+            entity.Property(e => e.MenuGroupIcon).HasMaxLength(50);
         });
 
         modelBuilder.Entity<UserActivityHistory>(entity =>

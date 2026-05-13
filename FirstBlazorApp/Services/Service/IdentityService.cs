@@ -140,9 +140,9 @@ namespace FirstBlazorApp.Services.Service
         }
 
         /// <summary>
-        /// Builds the full permissions matrix from ApplicationFunctionalities joined with FormDetail.
+        /// Builds the full permissions matrix from ApplicationFunctionalities.
+        /// Grouped by MenuGroupName (no FormDetail join needed).
         /// Each item's IsGranted = true if the role already has a "permission" claim with that ActionMethodName.
-        /// ClaimType is always "permission" — never exposed to the UI.
         /// </summary>
         public async Task<List<FunctionalityGroupDto>> GetFunctionalitiesMatrixAsync(int roleId)
         {
@@ -156,32 +156,33 @@ namespace FirstBlazorApp.Services.Service
                     grantedActions.Add(c.Value);
             }
 
-            // Load all active functionalities joined with FormDetail
-            var rows = await (
-                from f in _ctx.ApplicationFunctionalities
-                join fd in _ctx.FormDetail on f.FormId equals fd.Id
-                where f.IsActive == true
-                orderby fd.DisplayOrder, fd.DisplayName, f.FunctionalityName
-                select new
+            // Load all active functionalities — no FormDetail join
+            var rows = await _ctx.ApplicationFunctionalities
+                .Where(f => f.IsActive == true)
+                .OrderBy(f => f.MenuGroupOrder ?? 99)
+                .ThenBy(f => f.MenuGroupName)
+                .ThenBy(f => f.FunctionalityName)
+                .Select(f => new
                 {
-                    FormId      = fd.Id,
-                    FormDisplay = fd.DisplayName ?? fd.FormName ?? "General",
-                    FuncId      = f.Id,
-                    FuncName    = f.FunctionalityName ?? "",
-                    ActionName  = f.ActionMethodName ?? ""
-                }
-            ).ToListAsync();
+                    GroupName  = f.MenuGroupName  ?? "General",
+                    GroupOrder = f.MenuGroupOrder ?? 99,
+                    FuncId     = f.Id,
+                    FuncName   = f.FunctionalityName ?? "",
+                    ActionName = f.ActionMethodName  ?? ""
+                })
+                .ToListAsync();
 
-            // Group by Form
+            // Group by MenuGroupName
             return rows
-                .GroupBy(r => new { r.FormId, r.FormDisplay })
+                .GroupBy(r => new { r.GroupName, r.GroupOrder })
+                .OrderBy(g => g.Key.GroupOrder)
                 .Select(g => new FunctionalityGroupDto
                 {
-                    FormId          = g.Key.FormId,
-                    FormDisplayName = g.Key.FormDisplay,
+                    FormId          = 0,
+                    FormDisplayName = g.Key.GroupName,
                     Items = g.Select(r => new FunctionalityItemDto
                     {
-                        FunctionalityId  = r.FuncId,
+                        FunctionalityId   = r.FuncId,
                         FunctionalityName = r.FuncName,
                         ActionMethodName  = r.ActionName,
                         IsGranted         = grantedActions.Contains(r.ActionName)

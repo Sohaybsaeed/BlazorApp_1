@@ -7,101 +7,10 @@
 @inject NavigationManager Nav
 @rendermode InteractiveServer
 
-<!-- Main Content -->
-<div class="users-content">
-    <div class="users-card">
-        <h1 class="users-title">👤 User Management</h1>
-
-        <!-- Identity & Permissions — show if ManageRoles or ManagePermissions -->
-        @if (CanAccess("ManageRoles", "ManagePermissions"))
-        {
-            <div class="identity-featured-card" @onclick='() => Nav.NavigateTo("/users/identity-management")'>
-                <div class="identity-featured-icon">🔐</div>
-                <div class="identity-featured-info">
-                    <h2>Identity &amp; Permissions</h2>
-                    <div class="identity-featured-chips">
-                        <span>🏷️ Roles</span>
-                        <span>👥 User Roles</span>
-                        <span>🔑 Permissions</span>
-                    </div>
-                </div>
-                <div class="identity-featured-arrow">›</div>
-            </div>
-        }
-
-        <div class="users-menu-grid">
-
-            @if (CanAccess("CreateUser"))
-            {
-                <div class="menu-card" @onclick="NavigateToCreateUser">
-                    <div class="menu-icon create-user-icon">➕</div>
-                    <div class="menu-info">
-                        <h3>Create User</h3>
-                        <p>Add new users to the system</p>
-                    </div>
-                    <div class="menu-arrow">›</div>
-                </div>
-            }
-
-            @if (CanAccess("ViewUsers", "EditUser"))
-            {
-                <div class="menu-card" @onclick="NavigateToViewAllUsers">
-                    <div class="menu-icon view-users-icon">👥</div>
-                    <div class="menu-info">
-                        <h3>View &amp; Edit Users</h3>
-                        <p>Manage existing users</p>
-                    </div>
-                    <div class="menu-arrow">›</div>
-                </div>
-            }
-
-            @if (CanAccess("ManageRoles", "ManagePermissions", "CreateUser", "ViewUsers", "EditUser"))
-            {
-                <div class="menu-card" @onclick='() => Nav.NavigateTo("/users/external-logins")'>
-                    <div class="menu-icon" style="font-size:1.6rem;background:linear-gradient(135deg,#0ea5e9,#0284c7);border-radius:12px;width:56px;height:56px;display:flex;align-items:center;justify-content:center;">🔗</div>
-                    <div class="menu-info">
-                        <h3>External Logins</h3>
-                        <p>View &amp; remove OAuth links</p>
-                    </div>
-                    <div class="menu-arrow">›</div>
-                </div>
-
-                <div class="menu-card" @onclick='() => Nav.NavigateTo("/users/tokens")'>
-                    <div class="menu-icon" style="font-size:1.6rem;background:linear-gradient(135deg,#f59e0b,#d97706);border-radius:12px;width:56px;height:56px;display:flex;align-items:center;justify-content:center;">🎟️</div>
-                    <div class="menu-info">
-                        <h3>User Tokens</h3>
-                        <p>View &amp; revoke stored tokens</p>
-                    </div>
-                    <div class="menu-arrow">›</div>
-                </div>
-            }
-
-        </div>
-    </div>
-</div>
-
 @code {
-    /// <summary>
-    /// Returns true if:
-    ///   - User has NO permission claims (not yet configured → show all)
-    ///   - OR user has at least one of the given ActionMethodNames as a permission claim
-    /// </summary>
-    private bool CanAccess(params string[] actionMethodNames)
+    protected override void OnInitialized()
     {
-        var user = HttpContextAccessor.HttpContext?.User;
-        if (user?.Identity?.IsAuthenticated != true) return false;
-
-        var permClaims = user.Claims
-            .Where(c => string.Equals(c.Type, "permission", StringComparison.OrdinalIgnoreCase))
-            .Select(c => c.Value)
-            .ToHashSet(StringComparer.OrdinalIgnoreCase);
-
-        // No permissions configured yet → show everything
-        if (permClaims.Count == 0) return true;
-
-        return actionMethodNames.Any(a => permClaims.Contains(a));
+        // /users/view → directly go to the users list
+        Nav.NavigateTo("/users/list", replace: true);
     }
-
-    private void NavigateToCreateUser() => Nav.NavigateTo("/users/create");
-    private void NavigateToViewAllUsers() => Nav.NavigateTo("/users/list");
 }
